@@ -1,78 +1,78 @@
 # ReadApp - Democratizing Education Through AI-Powered Learning
 
-> **🏆 Hackathon Submission for "For Humanity" Category**
+> ** Hackathon Submission for "For Humanity" Category**
 > **Author:** ℭ𝔦𝔭𝔥𝔢𝔯 cipher-rc5 ([GitHub](https://github.com/cipher-rc5/))
 
 ---
 
-## 🌍 Mission: Education for All
+##  Mission: Education for All
 
 ReadApp transforms how people access and interact with educational content by leveraging cutting-edge AI to create a **free, offline-capable, and universally accessible learning platform**. Built with OpenAI's groundbreaking **gpt-oss-20b** model, this application democratizes quality education by removing traditional barriers: cost, internet dependency, and one-size-fits-all approaches.
 
-### 🚀 Humanitarian Impact
+###  Humanitarian Impact
 
 **Breaking Educational Barriers Globally:**
-- **💰 Cost Elimination**: Zero-cost educational content generation replaces expensive textbooks and online subscriptions
-- **🌐 Offline Independence**: Complete local storage eliminates internet dependency for underserved communities
-- **♿ Universal Accessibility**: Customizable interfaces serve users with diverse learning needs and abilities
-- **🗣️ Multilingual Support**: Content generation in multiple languages breaks down language barriers
-- **🎯 Personalized Learning**: Adaptive difficulty levels ensure no learner is left behind
+- ** Cost Elimination**: Zero-cost educational content generation replaces expensive textbooks and online subscriptions
+- ** Offline Independence**: Complete local storage eliminates internet dependency for underserved communities
+- ** Universal Accessibility**: Customizable interfaces serve users with diverse learning needs and abilities
+- ** Multilingual Support**: Content generation in multiple languages breaks down language barriers
+- ** Personalized Learning**: Adaptive difficulty levels ensure no learner is left behind
 
 ---
 
-## 🌟 Revolutionary Features
+##  Revolutionary Features
 
-### 🤖 Powered by gpt-oss-20b: The Perfect Educational AI
+###  Powered by gpt-oss-20b: The Perfect Educational AI
 
 **Why gpt-oss-20b is Transformational for Education:**
 
-#### 🎯 **Harmony Response Format** - Educational Excellence
+####  **Harmony Response Format** - Educational Excellence
 gpt-oss-20b uses OpenAI's innovative Harmony format, providing role-aware, structured conversations that enable sophisticated educational interactions. This allows:
 - **Multi-step Problem Solving**: Chain-of-thought reasoning with adjustable effort levels (low/medium/high)
 - **Interactive Tutoring**: Role-based instruction hierarchy for personalized learning paths
 - **Transparent Learning**: Full access to the model's reasoning process for debugging and increased trust
 
-#### ⚙️ **Mixture of Experts (MoE) Architecture** - Specialized Knowledge Domains
+####  **Mixture of Experts (MoE) Architecture** - Specialized Knowledge Domains
 gpt-oss-20b uses 32 expert models with only 3.6B active parameters per token, enabling:
 - **Subject-Specific Expertise**: Different experts handle STEM, literature, history, and languages optimally
 - **Efficient Resource Use**: MXFP4 quantization allows the model to run on just 16GB memory
 - **Cost-Effective Scaling**: Run sophisticated AI education tools on consumer hardware
 
-#### 🛠️ **Native Tool Integration** - Beyond Text Learning
+####  **Native Tool Integration** - Beyond Text Learning
 Built-in support for Python code execution, web browsing, and structured outputs enables:
 - **Live Code Learning**: Interactive programming tutorials with real-time execution
 - **Real-Time Information**: Web browsing for current events and fact-checking
 - **Structured Assessments**: Consistent question generation and grading
 
-#### 🔓 **Open-Weight Advantage** - Community-Driven Education
+####  **Open-Weight Advantage** - Community-Driven Education
 Apache 2.0 license enables free use without copyleft restrictions, ensuring:
-- **Global Accessibility**: No API costs or usage limits for educational institutions
+- **Global Accessibility**: Reduced API costs or usage limits for educational institutions and general consumers
 - **Community Enhancement**: Local fine-tuning for regional curricula and languages
 - **Educational Transparency**: Full model weights available for academic research
 
 ---
 
-## 💡 Key Features Solving Real Problems
+## Key Features Solving Real Problems
 
-### 📚 **AI-Powered Content Generation**
+###  **AI-Powered Content Generation**
 - **Dynamic Learning Materials**: Generate unlimited educational content tailored to any skill level
 - **Reading Comprehension**: Create passages with automatically generated questions and assessments
 - **Multi-Subject Coverage**: From quantum physics to ancient literature, covering 15+ academic domains
 - **Adaptive Difficulty**: Three reasoning levels ensure content matches learner capabilities
 
-### 🎨 **Accessible Interface Design**
+###  **Accessible Interface Design**
 - **Universal Design Principles**: Customizable fonts, themes, and layouts for diverse accessibility needs
-- **Responsive Architecture**: Works seamlessly across devices from smartphones to desktop computers
-- **Offline-First Design**: Full functionality without internet connectivity
-- **Multi-Language Support**: Content generation and UI in multiple languages
+- **Responsive Architecture**: Works seamlessly across different devices from tablets to desktop computers
+- **Offline-Ready Design**: Partial functionality without internet connectivity
+- **Multi-Language Support**: Content generation and UI in multiple languages(Planned)
 
-### 📊 **Learning Analytics for Impact**
+###  **Learning Analytics for Impact**
 - **Progress Monitoring**: Track individual learning journeys and identify improvement areas
 - **Performance Insights**: Detailed analytics on comprehension across different question types
 - **Adaptive Recommendations**: AI-powered suggestions for optimal learning paths
 - **Export Capabilities**: Generate reports for educators and institutions
 
-### 💾 **Robust Local Infrastructure**
+###  **Robust Local Infrastructure**
 - **Complete Offline Operation**: Full functionality without internet dependency
 - **Persistent Local Storage**: SQLite-based system ensures data privacy and availability
 - **Export Freedom**: Download content as markdown for sharing and archival
@@ -80,7 +80,7 @@ Apache 2.0 license enables free use without copyleft restrictions, ensuring:
 
 ---
 
-## 🏗️ Technical Architecture
+##  Technical Architecture
 
 ### **Core Technologies**
 - **Language**: Rust 2021 Edition (memory-safe, performant)
@@ -103,7 +103,7 @@ src/
 
 ---
 
-## 🚀 Quick Start Guide
+##  Quick Start Guide
 
 ### **Prerequisites**
 - **Hardware**: 16GB+ RAM (for gpt-oss-20b), any modern CPU
@@ -139,7 +139,7 @@ cargo run --release
 
 ---
 
-## 📖 Usage Examples: Transforming Education
+##  Usage Examples: Transforming Education
 
 ### **For Individual Learners**
 ```rust
@@ -166,7 +166,7 @@ let article = generate_educational_content(
 
 ---
 
-## 🌐 Global Impact Scenarios
+##  Global Impact Scenarios
 
 ### **Developing Regions**
 - **Rural Schools**: Offline operation enables quality education without reliable internet
@@ -185,7 +185,7 @@ let article = generate_educational_content(
 
 ---
 
-## 🔬 Technical Innovation: Why gpt-oss-20b Matters
+##  Technical Innovation: Why gpt-oss-20b Matters
 
 ### **Educational AI Breakthrough**
 gpt-oss-20b demonstrates smooth test-time scaling with adjustable reasoning levels, enabling:
@@ -203,7 +203,7 @@ Apache 2.0 licensing enables free customization and commercial deployment, suppo
 
 ---
 
-## 📊 Performance Benchmarks
+##  Performance Benchmarks
 
 ### **Educational Effectiveness**
 gpt-oss-20b achieves competitive performance on academic benchmarks:
@@ -220,7 +220,7 @@ gpt-oss-20b achieves competitive performance on academic benchmarks:
 
 ---
 
-## 🤝 Contributing to Global Education
+##  Contributing to Global Education
 
 ### **How to Contribute**
 ```bash
@@ -230,9 +230,6 @@ cd reading_app
 
 # Install development tools
 cargo install cargo-edit cargo-watch dprint
-
-# Run tests
-cargo test --all
 
 # Start development server
 cargo watch -x run
@@ -246,21 +243,21 @@ cargo watch -x run
 
 ---
 
-## 🎯 Roadmap: Expanding Educational Impact
+##  Roadmap: Expanding Educational Impact
 
-### **Phase 1: Foundation** ✅
+### **Phase 1: Foundation**
 - [x] Core AI integration with gpt-oss-20b
 - [x] Offline-capable architecture
 - [x] Basic accessibility features
 - [x] Local content generation
 
-### **Phase 2: Accessibility & Scale** 🚧
+### **Phase 2: Accessibility & Scale**
 - [ ] Advanced accessibility features (screen readers, high contrast, keyboard-only)
 - [ ] Multi-language interface and content generation
 - [ ] Mobile platform support (iOS/Android)
 - [ ] Advanced learning analytics and progress tracking
 
-### **Phase 3: Global Deployment** 📋
+### **Phase 3: Global Deployment**
 - [ ] Educator collaboration tools
 - [ ] Institutional deployment packages
 - [ ] Community curriculum sharing
@@ -268,7 +265,7 @@ cargo watch -x run
 
 ---
 
-## 📄 Open Source Commitment
+##  Open Source Commitment
 
 **License**: MIT License - Maximum freedom for educational use
 **Model**: gpt-oss-20b under Apache 2.0 License - Commercial and educational use permitted
@@ -288,7 +285,7 @@ cargo watch -x run
 
 ---
 
-## 🌟 Recognition & Support
+##  Recognition & Support
 
 **Hackathon Category**: For Humanity - Democratizing Education Through AI
 **Key Innovation**: First educational platform leveraging gpt-oss-20b's unique Harmony format for accessible, offline learning
@@ -300,12 +297,12 @@ cargo watch -x run
 
 ---
 
-## 💫 Vision Statement
+##  Vision Statement
 
 *ReadApp envisions a world where quality education is not limited by geography, economic status, or physical capability. By harnessing the power of gpt-oss-20b and open-source principles, we're building technology that serves humanity's greatest need: the democratization of knowledge and learning.*
 
-**Together, we can make education accessible to all.**
+**Together, we can make education accessible to all**
 
 ---
 
-*Built with ❤️ using Rust and powered by gpt-oss-20b • Licensed under MIT for maximum educational freedom*
+*Built with using Rust and powered by gpt-oss-20b • Licensed under MIT for maximum educational freedom*
