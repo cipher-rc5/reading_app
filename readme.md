@@ -2,6 +2,8 @@
 
 Sophisticated desktop reading application built with Rust, featuring AI-powered content generation, interactive reading experiences, and comprehensive learning analytics. This application leverages the unique capabilities of gpt-oss-20b via Groq's API for optimal educational content creation.
 
+![Reading App Interface](https://github.com/cipher-rc5/reading_app/blob/master/docs/app_usage.png)
+
 ## Key Features
 
 ### AI-Powered Content Generation
@@ -378,7 +380,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **OpenAI**: For building and making GPT-OSS an open-weights model for continued development
 - **Groq**: For providing access to gpt-oss-20b and their optimized inference platform
 - **Rust Community**: For the excellent ecosystem and tooling
-- **EGUI**: For an awesome, feature rich immediate gui in Rust
 - **Educational Technology Community**: For inspiration and best practices
 
 ## Support
