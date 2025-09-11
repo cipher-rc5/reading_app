@@ -392,4 +392,4 @@ For support, feature requests, or bug reports:
 
 ---
 
-Built with Rust and powered by gpt-oss-20b via Groq
+Built with [Rust](https://www.rust-lang.org/) and powered by [gpt-oss-20b](https://openai.com/index/gpt-oss-model-card/) via [Groq](https://groq.com/)
