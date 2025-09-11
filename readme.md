@@ -1,4 +1,4 @@
-# read_app - readme
+# reading_app - readme
 
 Sophisticated desktop reading application built with Rust, featuring AI-powered content generation, interactive reading
 experiences, and comprehensive learning analytics. This application leverages the unique capabilities of gpt-oss-20b via Groq's
@@ -412,4 +412,4 @@ handle specialized domains through expert routing while maintaining cost-effecti
 design.
 
 The document serves as both a user guide and developer reference, providing everything needed to understand, install, and
-contribute to the project! 
+contribute to the project!

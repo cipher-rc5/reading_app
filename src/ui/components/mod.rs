@@ -9,4 +9,5 @@ pub mod toolbar;
 pub use article_viewer::ArticleViewer;
 pub use sidebar::Sidebar;
 pub use status_bar::StatusBar;
+pub use text_toolbar::TextToolbar;
 pub use toolbar::Toolbar;

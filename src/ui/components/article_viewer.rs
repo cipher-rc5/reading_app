@@ -1,24 +1,34 @@
 // file: src/ui/components/article_viewer.rs
-// description: Enhanced article content display component with settings integration
+// description: Enhanced article content display component with interactive text selection
 
 use crate::{
     types::{Article, ContentType, RequestStatus, UISettings},
+    ui::events::UIEvent,
     ui::rendering::markdown::MarkdownRenderer,
+    ui::rendering::markdown_interactive::InteractiveMarkdownRenderer,
 };
 use egui;
 
 pub struct ArticleViewer {
     markdown_renderer: MarkdownRenderer,
+    interactive_renderer: InteractiveMarkdownRenderer,
+    interactive_mode: bool,
 }
 
 impl ArticleViewer {
     pub fn new() -> Self {
         Self {
             markdown_renderer: MarkdownRenderer::new(),
+            interactive_renderer: InteractiveMarkdownRenderer::new(),
+            interactive_mode: true, // Default to interactive mode for text selection
         }
     }
 
-    pub fn draw(&mut self, ui: &mut egui::Ui, status: &RequestStatus) {
+    pub fn set_interactive_mode(&mut self, interactive: bool) {
+        self.interactive_mode = interactive;
+    }
+
+    pub fn draw(&mut self, ui: &mut egui::Ui, status: &RequestStatus) -> Vec<UIEvent> {
         self.draw_with_settings(ui, status, &UISettings::default())
     }
 
@@ -27,7 +37,9 @@ impl ArticleViewer {
         ui: &mut egui::Ui,
         status: &RequestStatus,
         settings: &UISettings,
-    ) {
+    ) -> Vec<UIEvent> {
+        let mut events = Vec::new();
+
         match status {
             RequestStatus::Idle => {
                 self.draw_welcome_screen(ui, settings);
@@ -36,12 +48,15 @@ impl ArticleViewer {
                 self.draw_loading_screen(ui, settings);
             }
             RequestStatus::Success(content_type) => {
-                self.draw_content(ui, content_type, settings);
+                let content_events = self.draw_content(ui, content_type, settings);
+                events.extend(content_events);
             }
             RequestStatus::Error(error) => {
                 self.draw_error_screen(ui, error, settings);
             }
         }
+
+        events
     }
 
     fn draw_welcome_screen(&self, ui: &mut egui::Ui, settings: &UISettings) {
@@ -118,13 +133,23 @@ impl ArticleViewer {
         ui: &mut egui::Ui,
         content_type: &ContentType,
         settings: &UISettings,
-    ) {
+    ) -> Vec<UIEvent> {
         match content_type {
             ContentType::Article { content, .. } => {
-                self.draw_article(ui, content, settings);
+                if self.interactive_mode {
+                    self.draw_interactive_article(ui, content, settings)
+                } else {
+                    self.draw_article(ui, content, settings);
+                    Vec::new()
+                }
             }
             ContentType::ReadingPassage { content, .. } => {
-                self.draw_reading_passage(ui, content, settings);
+                if self.interactive_mode {
+                    self.draw_interactive_reading_passage(ui, content, settings)
+                } else {
+                    self.draw_reading_passage(ui, content, settings);
+                    Vec::new()
+                }
             }
         }
     }
@@ -174,6 +199,78 @@ impl ArticleViewer {
                 self.markdown_renderer
                     .render_with_settings(ui, &article.content, settings);
             });
+    }
+
+    fn draw_interactive_article(
+        &mut self,
+        ui: &mut egui::Ui,
+        article: &Article,
+        settings: &UISettings,
+    ) -> Vec<UIEvent> {
+        egui::ScrollArea::vertical()
+            .auto_shrink([false, false])
+            .show(ui, |ui| {
+                // Article header (non-interactive)
+                let title_text = settings.apply_header_style(egui::RichText::new(&article.title));
+                ui.heading(title_text);
+                ui.add_space(settings.paragraph_spacing);
+
+                // Article metadata (non-interactive)
+                ui.horizontal(|ui| {
+                    let meta_style = |text: String| {
+                        settings.apply_text_body_style(egui::RichText::new(text).weak())
+                    };
+
+                    ui.label(meta_style(format!(
+                        "Subject: {}",
+                        article.subject.display_name()
+                    )));
+                    ui.separator();
+
+                    let formatted_time = article
+                        .generated_at
+                        .format("%Y-%m-%d %H:%M UTC")
+                        .to_string();
+                    ui.label(meta_style(format!("Generated: {}", formatted_time)));
+
+                    if settings.show_article_stats {
+                        ui.separator();
+                        ui.label(meta_style(format!("Words: {}", article.word_count)));
+                        ui.separator();
+                        ui.label(meta_style(format!(
+                            "Read time: {}m",
+                            article.estimated_read_time
+                        )));
+                    }
+                });
+
+                ui.separator();
+                ui.add_space(settings.paragraph_spacing * 2.0);
+
+                // Mode toggle
+                ui.horizontal(|ui| {
+                    ui.label("Text Mode:");
+                    if ui
+                        .radio(self.interactive_mode, "Interactive (with text selection)")
+                        .clicked()
+                    {
+                        self.interactive_mode = true;
+                    }
+                    if ui
+                        .radio(!self.interactive_mode, "Static (read-only)")
+                        .clicked()
+                    {
+                        self.interactive_mode = false;
+                    }
+                });
+
+                ui.add_space(settings.paragraph_spacing);
+
+                // Interactive article content
+                self.interactive_renderer
+                    .render_with_settings(ui, &article.content, settings)
+            })
+            .inner
     }
 
     fn draw_reading_passage(
@@ -226,6 +323,76 @@ impl ArticleViewer {
             });
     }
 
+    fn draw_interactive_reading_passage(
+        &mut self,
+        ui: &mut egui::Ui,
+        passage: &crate::types::reading_passage::ReadingPassage,
+        settings: &UISettings,
+    ) -> Vec<UIEvent> {
+        egui::ScrollArea::vertical()
+            .auto_shrink([false, false])
+            .show(ui, |ui| {
+                // Passage header (non-interactive)
+                let title_text = settings.apply_header_style(egui::RichText::new(&passage.title));
+                ui.heading(title_text);
+                ui.add_space(settings.paragraph_spacing);
+
+                // Passage metadata (non-interactive)
+                ui.horizontal(|ui| {
+                    let meta_style = |text: String| {
+                        settings.apply_text_body_style(egui::RichText::new(text).weak())
+                    };
+
+                    ui.label(meta_style(format!(
+                        "Subject: {:?}",
+                        passage.subject_category
+                    )));
+                    ui.separator();
+                    ui.label(meta_style(format!(
+                        "Difficulty: {:?}",
+                        passage.difficulty_level
+                    )));
+                    ui.separator();
+
+                    if settings.show_article_stats {
+                        ui.label(meta_style(format!("Words: {}", passage.word_count)));
+                        ui.separator();
+                        ui.label(meta_style(format!(
+                            "Questions: {}",
+                            passage.questions.len()
+                        )));
+                    }
+                });
+
+                ui.separator();
+                ui.add_space(settings.paragraph_spacing * 2.0);
+
+                // Mode toggle
+                ui.horizontal(|ui| {
+                    ui.label("Text Mode:");
+                    if ui
+                        .radio(self.interactive_mode, "Interactive (with text selection)")
+                        .clicked()
+                    {
+                        self.interactive_mode = true;
+                    }
+                    if ui
+                        .radio(!self.interactive_mode, "Static (read-only)")
+                        .clicked()
+                    {
+                        self.interactive_mode = false;
+                    }
+                });
+
+                ui.add_space(settings.paragraph_spacing);
+
+                // Interactive passage content
+                self.interactive_renderer
+                    .render_with_settings(ui, &passage.content, settings)
+            })
+            .inner
+    }
+
     fn draw_error_screen(
         &self,
         ui: &mut egui::Ui,
@@ -264,5 +431,21 @@ impl ArticleViewer {
                 }
             });
         });
+    }
+
+    // Helper method to get current interactive mode state
+    pub fn is_interactive_mode(&self) -> bool {
+        self.interactive_mode
+    }
+
+    // Method to toggle between interactive and static modes
+    pub fn toggle_interactive_mode(&mut self) {
+        self.interactive_mode = !self.interactive_mode;
+    }
+}
+
+impl Default for ArticleViewer {
+    fn default() -> Self {
+        Self::new()
     }
 }
