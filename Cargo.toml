@@ -1,0 +1,25 @@
+[package]
+name = "reading_app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.99"
+chrono = { version = "0.4.41", features = ["serde"] }
+dirs = "6.0.0"
+dotenvy = "0.15.7"
+eframe = { version = "0.32.2", features = ["default_fonts", "glow", "persistence"] }
+egui = "0.32.2"
+env_logger = "0.11.8"
+futures = "0.3.31"
+libsql = "0.9.23"
+reqwest = { version = "0.12.23", features = ["json", "blocking"] }
+rustc_version_runtime = "0.3.0"
+serde = { version = "1.0.219", features = ["serde_derive"] }
+serde_json = "1.0.143"
+thiserror = "2.0.16"
+tokio = { version = "1.47.1", features = ["full", "macros"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt", "ansi"] }
+uuid = { version = "1.18.1", features = ["v4"] }
+webbrowser = "1.0.1"

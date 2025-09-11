@@ -1,0 +1,6 @@
+/target
+/_dev
+.env
+Cargo.lock
+reading_app.db
+.DS_Store
