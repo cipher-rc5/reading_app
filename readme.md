@@ -47,6 +47,7 @@ API for optimal educational content creation.
 
 ### Directory Structure
 
+```
 src/
 ├── app/                    # Main application logic
 │   ├── app.rs             # Core application state and UI
@@ -112,6 +113,7 @@ src/
 │   └── mod.rs             # Utils module exports
 ├── lib.rs                 # Library root and public exports
 └── main.rs                # Application entry point
+```
 
 ## 🚀 Installation & Setup
 
