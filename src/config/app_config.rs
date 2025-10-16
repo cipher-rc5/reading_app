@@ -1,5 +1,5 @@
 // file: src/config/app_config.rs
-// description: Application configuration management
+// description: application configuration management
 
 use crate::types::AppResult;
 use serde::{Deserialize, Serialize};

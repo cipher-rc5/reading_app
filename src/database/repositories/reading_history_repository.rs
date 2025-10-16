@@ -1,5 +1,5 @@
 // file: src/database/repositories/reading_history_repository.rs
-// description: Fixed reading history repository with proper column handling
+// description: reading history repository with proper column handling
 
 use crate::{database::connection::DatabaseConnection, types::AppResult};
 use libsql::Value;

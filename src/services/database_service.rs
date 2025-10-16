@@ -1,5 +1,5 @@
 // file: src/services/database_service.rs
-// description: Database operations service with graceful error handling
+// description: database operations service with graceful error handling
 
 use crate::{
     config::AppConfig,

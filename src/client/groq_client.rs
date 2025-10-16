@@ -1,16 +1,16 @@
 // file: src/client/groq_client.rs
-// description: Updated Groq API client with content cleaning for proper article display
+// description: Groq API client with content cleaning for proper article display
 
 use crate::{
     config::AppConfig,
     types::{
+        AppError, AppResult, Article, ArticleSubject, InputValidator,
         reading_passage::{
             DifficultyLevel, ReadingPassage, ReadingPassageResponse, SubjectCategory,
         },
-        AppError, AppResult, Article, ArticleSubject, InputValidator,
     },
 };
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::time::Duration;
 
 #[derive(Clone)]
@@ -114,10 +114,7 @@ impl GroqClient {
         }
 
         // Remove trailing empty lines
-        while normalized_lines
-            .last()
-            .map_or(false, |line| line.is_empty())
-        {
+        while normalized_lines.last().is_some_and(|line| line.is_empty()) {
             normalized_lines.pop();
         }
 
@@ -294,10 +291,8 @@ impl GroqClient {
         }
 
         // Add custom topic if provided
-        if let Some(topic) = custom_topic {
-            if !topic.trim().is_empty() {
-                prompt_parts.push(format!("Specific topic: {}", topic.trim()));
-            }
+        if let Some(topic) = custom_topic.filter(|topic| !topic.trim().is_empty()) {
+            prompt_parts.push(format!("Specific topic: {}", topic.trim()));
         }
 
         // Add content quality requirements

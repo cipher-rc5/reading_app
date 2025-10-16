@@ -1,7 +1,8 @@
 // file: src/types/settings.rs
-// description: Enhanced UI settings with corner style and improved validation
+// description: enhanced UI settings with corner style and improved validation
 
 use super::errors::{AppResult, ValidationError};
+use crate::utils::fonts::FontRegistry;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -16,7 +17,7 @@ pub struct UISettings {
     pub show_article_stats: bool,
     pub sidebar_width: f32,
 
-    // Enhanced font settings (from bibliotheca)
+    // enhanced font settings (from bibliotheca)
     pub text_body_font_size: f32,
     pub header_font_size: f32,
     pub text_body_font: String,
@@ -27,7 +28,7 @@ pub struct UISettings {
     pub link_color: String,
     pub accent_color: String,
 
-    // New corner style option
+    // new corner style option
     pub corner_style: String, // "rounded" or "square"
 }
 
@@ -58,7 +59,7 @@ impl Default for UISettings {
 
 impl UISettings {
     pub fn validate(&self) -> AppResult<()> {
-        // Enhanced validation from bibliotheca
+        // enhanced validation from bibliotheca
         if self.font_size < 8.0 || self.font_size > 32.0 {
             return Err(ValidationError::InvalidFormat(
                 "Font size must be between 8.0 and 32.0".to_string(),
@@ -186,42 +187,54 @@ impl UISettings {
     }
 
     // Font configuration - updated to use the font manager
-    pub fn get_available_fonts() -> Vec<(String, String)> {
-        // Get fonts from the font manager instead of hardcoded list
-        crate::utils::fonts::get_available_fonts()
+    pub fn get_available_fonts(fonts: &FontRegistry) -> Vec<(String, String)> {
+        fonts.available_fonts()
     }
 
-    pub fn get_font_family(&self, font_name: &str) -> egui::FontFamily {
-        // Use the font manager through the helper function
-        crate::utils::fonts::get_font_family_for_name(font_name)
+    pub fn get_font_family(&self, font_name: &str, fonts: &FontRegistry) -> egui::FontFamily {
+        fonts.font_family_for(font_name)
     }
 
     // **EXISTING TEXT STYLING METHODS** - These are retained from the original code
-    pub fn apply_text_body_style(&self, mut text: egui::RichText) -> egui::RichText {
+    pub fn apply_text_body_style(
+        &self,
+        fonts: &FontRegistry,
+        mut text: egui::RichText,
+    ) -> egui::RichText {
         text = text
             .size(self.get_text_body_font_size())
             .color(self.get_text_color())
-            .family(self.get_font_family(&self.text_body_font));
+            .family(self.get_font_family(&self.text_body_font, fonts));
         text
     }
 
-    pub fn apply_header_style(&self, mut text: egui::RichText) -> egui::RichText {
+    pub fn apply_header_style(
+        &self,
+        fonts: &FontRegistry,
+        mut text: egui::RichText,
+    ) -> egui::RichText {
         text = text
             .size(self.get_header_font_size())
             .color(self.get_header_color())
-            .family(self.get_font_family(&self.header_font))
+            .family(self.get_font_family(&self.header_font, fonts))
             .strong();
         text
     }
 
-    pub fn apply_font_style(&self, mut text: egui::RichText) -> egui::RichText {
+    pub fn apply_font_style(
+        &self,
+        fonts: &FontRegistry,
+        mut text: egui::RichText,
+    ) -> egui::RichText {
         text = text.size(self.get_font_size()).color(self.get_text_color());
 
         match self.font_family.as_str() {
-            "terminus_nerd_mono" | "monospace" => text.family(self.get_font_family("monospace")),
-            "serif" => text.family(self.get_font_family("serif")),
-            "sans-serif" => text.family(self.get_font_family("sans-serif")),
-            _ => text.family(self.get_font_family("default")),
+            "terminus_nerd_mono" | "monospace" => {
+                text.family(self.get_font_family("monospace", fonts))
+            }
+            "serif" => text.family(self.get_font_family("serif", fonts)),
+            "sans-serif" => text.family(self.get_font_family("sans-serif", fonts)),
+            _ => text.family(self.get_font_family("default", fonts)),
         }
     }
 
@@ -288,8 +301,8 @@ impl UISettings {
     }
 
     // Clean up legacy font settings that might cause warnings
-    pub fn sanitize_font_settings(&mut self) {
-        let available_fonts = Self::get_available_fonts();
+    pub fn sanitize_font_settings(&mut self, fonts: &FontRegistry) {
+        let available_fonts = Self::get_available_fonts(fonts);
         let available_font_keys: Vec<String> =
             available_fonts.iter().map(|(k, _)| k.clone()).collect();
 

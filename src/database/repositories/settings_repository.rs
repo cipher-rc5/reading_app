@@ -1,5 +1,5 @@
 // file: src/database/repositories/settings_repository.rs
-// description: Enhanced settings data access layer with graceful column handling
+// description: enhanced settings data access layer with graceful column handling
 
 use crate::{
     database::connection::DatabaseConnection,

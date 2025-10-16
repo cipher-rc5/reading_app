@@ -2,12 +2,13 @@
 // description: Application entry point with environment setup and runtime management
 
 use reading_app::{
-    app::{runtime, App},
+    app::{App, AppInitialization, AppRuntime},
     config::AppConfig,
-    utils::logging,
+    services::{ArticleService, DatabaseService, SettingsService},
+    utils::{fonts::FontRegistry, logging},
 };
 use std::process;
-use tracing::info;
+use tracing::{error, info};
 
 fn main() -> eframe::Result<()> {
     // Initialize logging first
@@ -20,9 +21,6 @@ fn main() -> eframe::Result<()> {
         "Starting Reading Application v{}",
         env!("CARGO_PKG_VERSION")
     );
-
-    // Initialize global async runtime early
-    runtime::init_runtime();
 
     // Load configuration
     let config = match AppConfig::load() {
@@ -52,6 +50,52 @@ fn main() -> eframe::Result<()> {
         }
     }));
 
+    let runtime = match AppRuntime::new() {
+        Ok(runtime) => runtime,
+        Err(err) => {
+            eprintln!("Failed to initialize async runtime: {}", err);
+            process::exit(1);
+        }
+    };
+
+    let font_registry = FontRegistry::new();
+
+    let article_service = ArticleService::new(&config).unwrap_or_else(|err| {
+        error!("Failed to initialize article service: {}", err);
+        ArticleService::default()
+    });
+
+    let database_service = runtime
+        .block_on(DatabaseService::new_async(&config))
+        .unwrap_or_else(|err| {
+            error!("Failed to initialize database service: {}", err);
+            DatabaseService::default()
+        });
+
+    let settings_service = SettingsService::new(
+        database_service.clone(),
+        runtime.clone(),
+        font_registry.clone(),
+    );
+    let ui_settings = settings_service.get_ui_settings();
+
+    let recent_articles = runtime
+        .block_on(database_service.get_recent_articles(20))
+        .unwrap_or_else(|err| {
+            error!("Failed to load recent articles: {}", err);
+            Vec::new()
+        });
+
+    let app_initialization = AppInitialization {
+        runtime,
+        article_service,
+        database_service,
+        settings_service,
+        font_registry: font_registry.clone(),
+        ui_settings,
+        recent_articles,
+    };
+
     // Configure native options
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -69,8 +113,8 @@ fn main() -> eframe::Result<()> {
         "Reading Article Application",
         native_options,
         Box::new(move |cc| {
-            reading_app::utils::fonts::configure(cc);
-            Ok(Box::new(App::new(config)))
+            font_registry.configure(cc);
+            Ok(Box::new(App::new(app_initialization)))
         }),
     )
 }

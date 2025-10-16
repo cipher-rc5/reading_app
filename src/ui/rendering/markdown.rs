@@ -1,10 +1,10 @@
 // file: src/ui/rendering/markdown.rs
 // description: Enhanced markdown parser with proper text flow and clean output
 
-use crate::types::UISettings;
+use crate::{types::UISettings, utils::fonts::FontRegistry};
 use egui;
 
-// Enhanced EasyMark parser based on the working version
+// Enhanced EasyMark parser
 mod easy_mark {
     #[derive(Copy, Clone, Debug, Eq, PartialEq)]
     pub enum Item<'a> {
@@ -66,7 +66,7 @@ mod easy_mark {
 
                 // Handle newlines - double newlines create paragraph breaks
                 if self.s.starts_with("\n\n") {
-                    self.s = &self.s[2..].trim_start();
+                    self.s = self.s[2..].trim_start();
                     self.start_of_line = true;
                     self.style = Style::default();
                     return Some(Item::Newline);
@@ -210,10 +210,6 @@ impl MarkdownRenderer {
         Self {}
     }
 
-    pub fn render(&mut self, ui: &mut egui::Ui, content: &str) {
-        self.render_with_settings(ui, content, &UISettings::default())
-    }
-
     // Clean content for proper display
     fn clean_content(&self, content: &str) -> String {
         content
@@ -258,6 +254,7 @@ impl MarkdownRenderer {
         ui: &mut egui::Ui,
         content: &str,
         settings: &UISettings,
+        fonts: &FontRegistry,
     ) {
         use easy_mark::{Item, Parser};
 
@@ -275,7 +272,7 @@ impl MarkdownRenderer {
                         if !is_first_item {
                             ui.add_space(settings.paragraph_spacing);
                         }
-                        self.render_paragraph_parts(ui, &current_paragraph_parts, settings);
+                        self.render_paragraph_parts(ui, &current_paragraph_parts, settings, fonts);
                         current_paragraph_parts.clear();
                         is_first_item = false;
                     }
@@ -291,7 +288,7 @@ impl MarkdownRenderer {
                         if !is_first_item {
                             ui.add_space(settings.paragraph_spacing);
                         }
-                        self.render_paragraph_parts(ui, &current_paragraph_parts, settings);
+                        self.render_paragraph_parts(ui, &current_paragraph_parts, settings, fonts);
                         current_paragraph_parts.clear();
                         is_first_item = false;
                     }
@@ -299,7 +296,8 @@ impl MarkdownRenderer {
                     if !is_first_item {
                         ui.add_space(settings.paragraph_spacing * 1.5);
                     }
-                    let heading_text = settings.apply_header_style(egui::RichText::new(text));
+                    let heading_text =
+                        settings.apply_header_style(fonts, egui::RichText::new(text));
                     ui.heading(heading_text);
                     ui.add_space(settings.paragraph_spacing);
                     is_first_item = false;
@@ -310,7 +308,7 @@ impl MarkdownRenderer {
                         if !is_first_item {
                             ui.add_space(settings.paragraph_spacing);
                         }
-                        self.render_paragraph_parts(ui, &current_paragraph_parts, settings);
+                        self.render_paragraph_parts(ui, &current_paragraph_parts, settings, fonts);
                         current_paragraph_parts.clear();
                         is_first_item = false;
                     }
@@ -319,10 +317,12 @@ impl MarkdownRenderer {
                         ui.add_space(settings.paragraph_spacing / 2.0);
                     }
                     ui.horizontal(|ui| {
-                        let bullet = settings.apply_text_body_style(egui::RichText::new("• "));
+                        let bullet =
+                            settings.apply_text_body_style(fonts, egui::RichText::new("• "));
                         ui.label(bullet);
 
-                        let bullet_text = settings.apply_text_body_style(egui::RichText::new(text));
+                        let bullet_text =
+                            settings.apply_text_body_style(fonts, egui::RichText::new(text));
                         ui.add(egui::Label::new(bullet_text).wrap());
                     });
                     is_first_item = false;
@@ -333,7 +333,7 @@ impl MarkdownRenderer {
                         if !is_first_item {
                             ui.add_space(settings.paragraph_spacing);
                         }
-                        self.render_paragraph_parts(ui, &current_paragraph_parts, settings);
+                        self.render_paragraph_parts(ui, &current_paragraph_parts, settings, fonts);
                         current_paragraph_parts.clear();
                         is_first_item = false;
                     }
@@ -342,11 +342,14 @@ impl MarkdownRenderer {
                         ui.add_space(settings.paragraph_spacing / 2.0);
                     }
                     ui.horizontal(|ui| {
-                        let number_text = settings
-                            .apply_text_body_style(egui::RichText::new(format!("{}. ", number)));
+                        let number_text = settings.apply_text_body_style(
+                            fonts,
+                            egui::RichText::new(format!("{}. ", number)),
+                        );
                         ui.label(number_text);
 
-                        let point_text = settings.apply_text_body_style(egui::RichText::new(text));
+                        let point_text =
+                            settings.apply_text_body_style(fonts, egui::RichText::new(text));
                         ui.add(egui::Label::new(point_text).wrap());
                     });
                     is_first_item = false;
@@ -357,7 +360,7 @@ impl MarkdownRenderer {
                         if !is_first_item {
                             ui.add_space(settings.paragraph_spacing);
                         }
-                        self.render_paragraph_parts(ui, &current_paragraph_parts, settings);
+                        self.render_paragraph_parts(ui, &current_paragraph_parts, settings, fonts);
                         current_paragraph_parts.clear();
                         is_first_item = false;
                     }
@@ -393,7 +396,7 @@ impl MarkdownRenderer {
                         if !is_first_item {
                             ui.add_space(settings.paragraph_spacing);
                         }
-                        self.render_paragraph_parts(ui, &current_paragraph_parts, settings);
+                        self.render_paragraph_parts(ui, &current_paragraph_parts, settings, fonts);
                         current_paragraph_parts.clear();
                         is_first_item = false;
                     }
@@ -413,7 +416,7 @@ impl MarkdownRenderer {
             if !is_first_item {
                 ui.add_space(settings.paragraph_spacing);
             }
-            self.render_paragraph_parts(ui, &current_paragraph_parts, settings);
+            self.render_paragraph_parts(ui, &current_paragraph_parts, settings, fonts);
         }
     }
 
@@ -422,6 +425,7 @@ impl MarkdownRenderer {
         ui: &mut egui::Ui,
         parts: &[(easy_mark::Style, &str)],
         settings: &UISettings,
+        fonts: &FontRegistry,
     ) {
         ui.horizontal_wrapped(|ui| {
             for (style, text) in parts {
@@ -429,7 +433,8 @@ impl MarkdownRenderer {
                     continue;
                 }
 
-                let mut rich_text = settings.apply_text_body_style(egui::RichText::new(*text));
+                let mut rich_text =
+                    settings.apply_text_body_style(fonts, egui::RichText::new(*text));
 
                 if style.strong {
                     rich_text = rich_text.strong();
@@ -448,5 +453,11 @@ impl MarkdownRenderer {
                 ui.add(egui::Label::new(rich_text).wrap());
             }
         });
+    }
+}
+
+impl Default for MarkdownRenderer {
+    fn default() -> Self {
+        Self::new()
     }
 }

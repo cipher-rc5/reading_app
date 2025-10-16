@@ -85,7 +85,7 @@ impl TextToolbar {
                 // Action buttons
                 ui.horizontal(|ui| {
                     if ui
-                        .button("📖 Define")
+                        .button(" Define")
                         .on_hover_text("Look up definition")
                         .clicked()
                     {
@@ -98,7 +98,7 @@ impl TextToolbar {
                     }
 
                     if ui
-                        .button("💬 Explain")
+                        .button(" Explain")
                         .on_hover_text("Explain this text")
                         .clicked()
                     {
@@ -110,7 +110,7 @@ impl TextToolbar {
                     }
 
                     if ui
-                        .button("📋 Copy")
+                        .button(" Copy")
                         .on_hover_text("Copy to clipboard")
                         .clicked()
                     {
@@ -121,7 +121,7 @@ impl TextToolbar {
 
                 ui.horizontal(|ui| {
                     if ui
-                        .button("🔍 Search")
+                        .button(" Search")
                         .on_hover_text("Search for this text")
                         .clicked()
                     {

@@ -1,4 +1,5 @@
 // file: src/ui/windows/debug.rs
+
 use crate::services::DatabaseService;
 use egui;
 
@@ -54,5 +55,11 @@ impl DebugWindow {
                     self.show = false;
                 }
             });
+    }
+}
+
+impl Default for DebugWindow {
+    fn default() -> Self {
+        Self::new()
     }
 }

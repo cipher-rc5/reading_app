@@ -1,7 +1,7 @@
 // file: src/app/mod.rs
 
-pub mod app;
+pub mod application;
 pub mod runtime;
 
-pub use app::App;
-pub use runtime::RuntimeManager;
+pub use application::{App, AppInitialization};
+pub use runtime::AppRuntime;

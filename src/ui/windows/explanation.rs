@@ -2,7 +2,7 @@
 // description: Text explanation window using Groq API with environment variable reloading
 
 use egui;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::sync::mpsc;
 use tracing::{error, info};
 
@@ -174,21 +174,23 @@ impl ExplanationWindow {
         }
 
         // Check for received explanation
-        if let Some(ref receiver) = self.explanation_receiver {
-            if let Ok(result) = receiver.try_recv() {
-                self.loading = false;
-                match result {
-                    Ok(explanation) => {
-                        info!("Explanation received successfully");
-                        self.explanation = explanation;
-                    }
-                    Err(error) => {
-                        error!("Explanation request failed: {}", error);
-                        self.explanation = format!("Error: {}", error);
-                    }
+        if let Some(result) = self
+            .explanation_receiver
+            .as_ref()
+            .and_then(|receiver| receiver.try_recv().ok())
+        {
+            self.loading = false;
+            match result {
+                Ok(explanation) => {
+                    info!("Explanation received successfully");
+                    self.explanation = explanation;
                 }
-                self.explanation_receiver = None;
+                Err(error) => {
+                    error!("Explanation request failed: {}", error);
+                    self.explanation = format!("Error: {}", error);
+                }
             }
+            self.explanation_receiver = None;
         }
 
         egui::Window::new("Text Explanation")
@@ -263,10 +265,9 @@ impl ExplanationWindow {
                     if !self.loading
                         && !self.selected_text.is_empty()
                         && !self.explanation.starts_with("Error:")
+                        && ui.button("Explain Again").clicked()
                     {
-                        if ui.button("Explain Again").clicked() {
-                            self.explain_text(self.selected_text.clone(), self.context.clone());
-                        }
+                        self.explain_text(self.selected_text.clone(), self.context.clone());
                     }
 
                     // Check current API key status and show helpful info

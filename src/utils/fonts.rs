@@ -5,6 +5,7 @@ use egui::{FontData, FontDefinitions, FontFamily};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
+use std::sync::{Arc, Mutex};
 use tracing::{error, info, warn};
 
 pub struct FontManager {
@@ -63,44 +64,45 @@ impl FontManager {
         if let Ok(entries) = fs::read_dir(path) {
             for entry in entries.flatten() {
                 let path = entry.path();
-                if path.is_file() {
-                    if let Some(extension) = path.extension() {
-                        let ext = extension.to_string_lossy().to_lowercase();
-                        if matches!(ext.as_str(), "ttf" | "otf") {
-                            if let Some(name) = path.file_stem() {
-                                let font_name = name.to_string_lossy().to_string();
-                                let font_path = path.to_string_lossy().to_string();
+                if !path.is_file() {
+                    continue;
+                }
 
-                                // Special handling for TerminessTTF Nerd Font
-                                if font_name.contains("TerminessTTF")
-                                    || font_name.contains("Terminess")
-                                {
-                                    self.available_fonts
-                                        .insert("terminus_nerd_mono".to_string(), font_path);
-                                }
-                                // Look for common system fonts by name patterns
-                                else if font_name.to_lowercase().contains("times") {
-                                    self.available_fonts
-                                        .insert("times_font".to_string(), font_path);
-                                } else if font_name.to_lowercase().contains("arial") {
-                                    self.available_fonts
-                                        .insert("arial_font".to_string(), font_path);
-                                } else if font_name.to_lowercase().contains("helvetica") {
-                                    self.available_fonts
-                                        .insert("helvetica_font".to_string(), font_path);
-                                }
-                                // Store other fonts with sanitized names
-                                else {
-                                    let sanitized_name = font_name
-                                        .replace(" ", "_")
-                                        .replace("(", "")
-                                        .replace(")", "")
-                                        .to_lowercase();
-                                    self.available_fonts.insert(sanitized_name, font_path);
-                                }
-                            }
-                        }
-                    }
+                let Some(extension) = path.extension() else {
+                    continue;
+                };
+
+                let ext = extension.to_string_lossy().to_lowercase();
+                if !matches!(ext.as_str(), "ttf" | "otf") {
+                    continue;
+                }
+
+                let Some(name) = path.file_stem() else {
+                    continue;
+                };
+
+                let font_name = name.to_string_lossy().to_string();
+                let font_path = path.to_string_lossy().to_string();
+
+                if font_name.contains("TerminessTTF") || font_name.contains("Terminess") {
+                    self.available_fonts
+                        .insert("terminus_nerd_mono".to_string(), font_path);
+                } else if font_name.to_lowercase().contains("times") {
+                    self.available_fonts
+                        .insert("times_font".to_string(), font_path);
+                } else if font_name.to_lowercase().contains("arial") {
+                    self.available_fonts
+                        .insert("arial_font".to_string(), font_path);
+                } else if font_name.to_lowercase().contains("helvetica") {
+                    self.available_fonts
+                        .insert("helvetica_font".to_string(), font_path);
+                } else {
+                    let sanitized_name = font_name
+                        .replace(" ", "_")
+                        .replace("(", "")
+                        .replace(")", "")
+                        .to_lowercase();
+                    self.available_fonts.insert(sanitized_name, font_path);
                 }
             }
         }
@@ -156,67 +158,90 @@ impl FontManager {
     }
 }
 
-// Global font manager instance
-pub fn get_font_manager() -> &'static std::sync::Mutex<FontManager> {
-    use std::sync::{Mutex, OnceLock};
-
-    static FONT_MANAGER_CELL: OnceLock<Mutex<FontManager>> = OnceLock::new();
-    FONT_MANAGER_CELL.get_or_init(|| Mutex::new(FontManager::new()))
+impl Default for FontManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
-pub fn configure(cc: &eframe::CreationContext<'_>) {
-    let ctx = &cc.egui_ctx;
-    let font_manager_mutex = get_font_manager();
-    let mut font_manager = font_manager_mutex.lock().unwrap();
+#[derive(Clone)]
+pub struct FontRegistry {
+    manager: Arc<Mutex<FontManager>>,
+}
 
-    let mut fonts = FontDefinitions::default();
+impl FontRegistry {
+    pub fn new() -> Self {
+        Self::default()
+    }
 
-    // Load system fonts that were found and CAN BE LOADED
-    let font_keys_to_try: Vec<String> = font_manager.available_fonts.keys().cloned().collect();
+    pub fn configure(&self, cc: &eframe::CreationContext<'_>) {
+        let ctx = &cc.egui_ctx;
+        let mut fonts = FontDefinitions::default();
 
-    for font_key in font_keys_to_try {
-        if let Some(font_data) = font_manager.load_font_data(&font_key) {
-            // Insert the font data with a unique key
-            fonts.font_data.insert(font_key.clone(), font_data.into());
+        if let Ok(mut manager) = self.manager.lock() {
+            let font_keys_to_try: Vec<String> = manager.available_fonts.keys().cloned().collect();
 
-            // Create a font family for this font
-            fonts.families.insert(
-                FontFamily::Name(font_key.clone().into()),
-                vec![font_key.clone()],
-            );
+            for font_key in font_keys_to_try {
+                if let Some(font_data) = manager.load_font_data(&font_key) {
+                    fonts.font_data.insert(font_key.clone(), font_data.into());
 
-            // Track that this font was successfully loaded
-            font_manager.register_loaded_font(font_key);
+                    fonts.families.insert(
+                        FontFamily::Name(font_key.clone().into()),
+                        vec![font_key.clone()],
+                    );
+
+                    manager.register_loaded_font(font_key);
+                }
+            }
+        } else {
+            warn!("Unable to lock font manager for configuration");
+        }
+
+        ctx.set_fonts(fonts);
+    }
+
+    pub fn available_fonts(&self) -> Vec<(String, String)> {
+        self.with_manager(Vec::new(), |manager| manager.get_available_fonts())
+    }
+
+    pub fn has_font(&self, font_name: &str) -> bool {
+        self.with_manager(false, |manager| manager.has_font(font_name))
+    }
+
+    pub fn font_family_for(&self, font_name: &str) -> egui::FontFamily {
+        self.with_manager(egui::FontFamily::Proportional, |manager| match font_name {
+            "default" => egui::FontFamily::Proportional,
+            "monospace" => egui::FontFamily::Monospace,
+            _ => {
+                if manager.loaded_font_keys.contains(&font_name.to_string()) {
+                    egui::FontFamily::Name(font_name.into())
+                } else {
+                    warn!("Font '{}' not loaded, falling back to default", font_name);
+                    egui::FontFamily::Proportional
+                }
+            }
+        })
+    }
+}
+
+impl Default for FontRegistry {
+    fn default() -> Self {
+        Self {
+            manager: Arc::new(Mutex::new(FontManager::new())),
         }
     }
-    ctx.set_fonts(fonts);
 }
 
-// Helper functions for UISettings
-pub fn get_available_fonts() -> Vec<(String, String)> {
-    let font_manager_mutex = get_font_manager();
-    let font_manager = font_manager_mutex.lock().unwrap();
-    font_manager.get_available_fonts()
-}
-
-pub fn get_font_family_for_name(font_name: &str) -> egui::FontFamily {
-    let font_manager_mutex = get_font_manager();
-    let font_manager = font_manager_mutex.lock().unwrap();
-
-    match font_name {
-        "default" => egui::FontFamily::Proportional,
-        "monospace" => egui::FontFamily::Monospace,
-        _ => {
-            // Check if it's a system font we actually loaded
-            if font_manager
-                .loaded_font_keys
-                .contains(&font_name.to_string())
-            {
-                egui::FontFamily::Name(font_name.into())
-            } else {
-                // Safe fallback - use built-in fonts only
-                warn!("Font '{}' not loaded, falling back to default", font_name);
-                egui::FontFamily::Proportional
+impl FontRegistry {
+    fn with_manager<F, R>(&self, fallback: R, operation: F) -> R
+    where
+        F: FnOnce(&FontManager) -> R,
+    {
+        match self.manager.lock() {
+            Ok(manager) => operation(&manager),
+            Err(_) => {
+                warn!("Font manager poisoned; returning default value");
+                fallback
             }
         }
     }

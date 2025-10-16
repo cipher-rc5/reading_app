@@ -4,11 +4,13 @@
 use crate::ui::events::UIEvent;
 use egui;
 
-pub struct Toolbar;
+pub struct Toolbar {
+    show_about: bool,
+}
 
 impl Toolbar {
     pub fn new() -> Self {
-        Self
+        Self { show_about: false }
     }
 }
 
@@ -68,12 +70,22 @@ impl Toolbar {
 
                 ui.menu_button("Help", |ui| {
                     if ui.button("About").clicked() {
-                        // TODO: Show about dialog
+                        self.show_about = true;
                         ui.close();
                     }
                 });
             });
         });
+
+        if self.show_about {
+            egui::Window::new("About Reading App")
+                .open(&mut self.show_about)
+                .resizable(false)
+                .show(ctx, |ui| {
+                    ui.label("Reading App helps you generate and organize articles locally.");
+                    ui.label("Version:".to_owned() + env!("CARGO_PKG_VERSION"));
+                });
+        }
 
         events
     }

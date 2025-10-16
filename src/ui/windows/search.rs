@@ -1,7 +1,7 @@
 // file: src/ui/windows/search.rs
 // description: Search window
 
-use crate::services::DatabaseService;
+use crate::ui::events::UIEvent;
 use egui;
 
 pub struct SearchWindow {
@@ -29,9 +29,11 @@ impl SearchWindow {
         self.show = true;
     }
 
-    pub fn draw(&mut self, ctx: &egui::Context, _database_service: &DatabaseService) {
+    pub fn draw(&mut self, ctx: &egui::Context) -> Vec<UIEvent> {
+        let mut events = Vec::new();
+
         if !self.show {
-            return;
+            return events;
         }
 
         egui::Window::new("Search Articles")
@@ -44,19 +46,21 @@ impl SearchWindow {
                             .hint_text("Enter search terms..."),
                     );
 
-                    if ui.button("Search").clicked() {
-                        // Perform search
+                    if ui.button("Search").clicked() && !self.query.trim().is_empty() {
+                        events.push(UIEvent::SearchQuery(self.query.trim().to_string()));
                     }
                 });
 
                 ui.separator();
 
-                // TODO: Display search results
+                ui.label("Search results appear in the Recent Articles panel.");
 
                 ui.add_space(10.0);
                 if ui.button("Close").clicked() {
                     self.show = false;
                 }
             });
+
+        events
     }
 }

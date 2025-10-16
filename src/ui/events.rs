@@ -3,8 +3,8 @@
 
 use crate::services::article_service::ContentGenerationRequest;
 use crate::types::{
-    reading_passage::{DifficultyLevel, ReadingPassage, SubjectCategory},
     AppError, Article, ArticleSubject, ContentType,
+    reading_passage::{DifficultyLevel, ReadingPassage, SubjectCategory},
 };
 
 #[derive(Debug, Clone)]

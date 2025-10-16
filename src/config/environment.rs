@@ -1,5 +1,5 @@
 // file: src/config/environment.rs
-// description: Environment variable handling
+// description: environment variable handling
 
 use crate::types::{AppError, AppResult};
 use std::path::Path;

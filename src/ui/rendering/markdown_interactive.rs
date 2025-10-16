@@ -4,6 +4,7 @@
 use crate::types::UISettings;
 use crate::ui::components::text_toolbar::TextToolbar;
 use crate::ui::events::UIEvent;
+use crate::utils::fonts::FontRegistry;
 use egui;
 
 pub struct InteractiveMarkdownRenderer {
@@ -26,6 +27,7 @@ impl InteractiveMarkdownRenderer {
         ui: &mut egui::Ui,
         content: &str,
         settings: &UISettings,
+        fonts: &FontRegistry,
     ) -> Vec<UIEvent> {
         let mut events = Vec::new();
 
@@ -34,7 +36,7 @@ impl InteractiveMarkdownRenderer {
         events.extend(toolbar_events);
 
         // Render the content with text selection capabilities
-        self.render_selectable_content(ui, content, settings, &mut events);
+        self.render_selectable_content(ui, content, settings, fonts, &mut events);
 
         events
     }
@@ -44,6 +46,7 @@ impl InteractiveMarkdownRenderer {
         ui: &mut egui::Ui,
         content: &str,
         settings: &UISettings,
+        fonts: &FontRegistry,
         _events: &mut Vec<UIEvent>,
     ) {
         // Split content into paragraphs for better selection handling
@@ -54,7 +57,7 @@ impl InteractiveMarkdownRenderer {
                 ui.add_space(settings.paragraph_spacing);
             }
 
-            self.render_selectable_paragraph(ui, paragraph, settings, _events);
+            self.render_selectable_paragraph(ui, paragraph, settings, fonts, _events);
         }
     }
 
@@ -63,29 +66,30 @@ impl InteractiveMarkdownRenderer {
         ui: &mut egui::Ui,
         paragraph: &str,
         settings: &UISettings,
+        fonts: &FontRegistry,
         _events: &mut Vec<UIEvent>,
     ) {
         // Handle different markdown elements
         if paragraph.starts_with("# ") {
             let heading = paragraph.trim_start_matches("# ").trim();
-            self.render_selectable_text(ui, heading, settings, _events, true);
+            self.render_selectable_text(ui, heading, settings, fonts, _events, true);
         } else if paragraph.starts_with("## ") {
             let heading = paragraph.trim_start_matches("## ").trim();
-            self.render_selectable_text(ui, heading, settings, _events, true);
+            self.render_selectable_text(ui, heading, settings, fonts, _events, true);
         } else if paragraph.starts_with("### ") {
             let heading = paragraph.trim_start_matches("### ").trim();
-            self.render_selectable_text(ui, heading, settings, _events, true);
+            self.render_selectable_text(ui, heading, settings, fonts, _events, true);
         } else if paragraph.starts_with("- ") {
             // Bullet point
             ui.horizontal(|ui| {
-                let bullet = settings.apply_text_body_style(egui::RichText::new("• "));
+                let bullet = settings.apply_text_body_style(fonts, egui::RichText::new("• "));
                 ui.label(bullet);
                 let text = paragraph.trim_start_matches("- ").trim();
-                self.render_selectable_text(ui, text, settings, _events, false);
+                self.render_selectable_text(ui, text, settings, fonts, _events, false);
             });
         } else {
             // Regular paragraph
-            self.render_selectable_text(ui, paragraph, settings, _events, false);
+            self.render_selectable_text(ui, paragraph, settings, fonts, _events, false);
         }
     }
 
@@ -94,14 +98,15 @@ impl InteractiveMarkdownRenderer {
         ui: &mut egui::Ui,
         text: &str,
         settings: &UISettings,
+        fonts: &FontRegistry,
         _events: &mut Vec<UIEvent>,
         is_heading: bool,
     ) {
         // Create a selectable label
         let rich_text = if is_heading {
-            settings.apply_header_style(egui::RichText::new(text))
+            settings.apply_header_style(fonts, egui::RichText::new(text))
         } else {
-            settings.apply_text_body_style(egui::RichText::new(text))
+            settings.apply_text_body_style(fonts, egui::RichText::new(text))
         };
 
         let response = ui.add(
@@ -134,12 +139,14 @@ impl InteractiveMarkdownRenderer {
 
         // Handle double-click for word selection
         if response.double_clicked() {
-            if let Some(pointer_pos) = ui.ctx().pointer_latest_pos() {
-                if let Some(word) = self.get_word_at_position(&response, text) {
-                    if TextToolbar::should_show_for_text(&word) {
-                        self.text_toolbar.show_at_position(pointer_pos, word);
-                    }
+            match (
+                ui.ctx().pointer_latest_pos(),
+                self.get_word_at_position(&response, text),
+            ) {
+                (Some(pointer_pos), Some(word)) if TextToolbar::should_show_for_text(&word) => {
+                    self.text_toolbar.show_at_position(pointer_pos, word);
                 }
+                _ => {}
             }
         }
     }
@@ -167,11 +174,7 @@ impl InteractiveMarkdownRenderer {
         // Simplified: return the first word
         // In a real implementation, you'd calculate which word was clicked based on position
         let word = self.get_first_word(text);
-        if word.is_empty() {
-            None
-        } else {
-            Some(word)
-        }
+        if word.is_empty() { None } else { Some(word) }
     }
 
     fn get_first_word(&self, text: &str) -> String {
@@ -194,5 +197,11 @@ impl InteractiveMarkdownRenderer {
                 .collect::<Vec<_>>()
                 .join(" ")
         }
+    }
+}
+
+impl Default for InteractiveMarkdownRenderer {
+    fn default() -> Self {
+        Self::new()
     }
 }

@@ -1,12 +1,12 @@
 // file: src/services/article_service.rs
-// description: Enhanced article service supporting both articles and reading passages
+// description: enhanced article service supporting both articles and reading passages
 
 use crate::{
     client::GroqClient,
     config::AppConfig,
     types::{
-        reading_passage::{DifficultyLevel, ReadingPassage, SubjectCategory},
         AppResult, Article, ArticleSubject, ContentType,
+        reading_passage::{DifficultyLevel, ReadingPassage, SubjectCategory},
     },
 };
 use std::sync::Arc;
@@ -127,7 +127,7 @@ impl ArticleService {
         SubjectCategory::all()
     }
 
-    /// Get recommended difficulty based on user performance (placeholder for future implementation)
+    /// Get recommended difficulty based on user performance (returns intermediate until adaptive logic is available)
     pub fn get_recommended_difficulty(&self, _user_performance: Option<f32>) -> DifficultyLevel {
         // For now, return intermediate as default
         // In the future, this could analyze user performance data

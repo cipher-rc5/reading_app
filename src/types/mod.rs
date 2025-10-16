@@ -19,7 +19,7 @@ pub use validation::InputValidator;
 pub enum RequestStatus {
     Idle,
     Loading,
-    Success(ContentType), // Updated to support both articles and reading passages
+    Success(Box<ContentType>), // Updated to support both articles and reading passages
     Error(AppError),
 }
 

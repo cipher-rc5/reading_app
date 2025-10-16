@@ -1,5 +1,5 @@
 // file: src/types/reading_passage.rs
-// description: Generalized reading passage types that extend existing article system
+// description: generalized reading passage types that extend existing article system
 
 use super::errors::AppResult;
 use super::validation::InputValidator;

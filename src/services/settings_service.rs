@@ -1,10 +1,11 @@
 // file: src/services/settings_service.rs
-// description: Settings management service
+// description: settings management service
 
 use crate::{
-    app::runtime,
+    app::runtime::AppRuntime,
     services::DatabaseService,
     types::{AppResult, UISettings},
+    utils::fonts::FontRegistry,
 };
 use std::sync::RwLock;
 use tracing::{error, info};
@@ -12,36 +13,44 @@ use tracing::{error, info};
 pub struct SettingsService {
     database_service: DatabaseService,
     cached_settings: RwLock<Option<UISettings>>,
-    runtime_handle: tokio::runtime::Handle,
+    runtime: AppRuntime,
+    font_registry: FontRegistry,
 }
 
 impl SettingsService {
-    pub fn new(database_service: DatabaseService) -> Self {
-        let runtime_handle = runtime::get_runtime_handle();
+    pub fn new(
+        database_service: DatabaseService,
+        runtime: AppRuntime,
+        font_registry: FontRegistry,
+    ) -> Self {
         Self {
             database_service,
             cached_settings: RwLock::new(None),
-            runtime_handle,
+            runtime,
+            font_registry,
         }
     }
 
     pub fn get_ui_settings(&self) -> UISettings {
         // Check cache first
-        if let Ok(cached) = self.cached_settings.read() {
-            if let Some(ref settings) = *cached {
-                return settings.clone();
-            }
+        if let Some(settings) = self
+            .cached_settings
+            .read()
+            .ok()
+            .and_then(|guard| guard.clone())
+        {
+            return settings;
         }
 
         // Load from database using spawn_blocking for UI thread
         let database_service = self.database_service.clone();
         let result = self
-            .runtime_handle
+            .runtime
             .block_on(async { database_service.get_ui_settings().await });
 
         match result {
             Ok(mut settings) => {
-                settings.sanitize_font_settings();
+                settings.sanitize_font_settings(&self.font_registry);
 
                 // Update cache
                 if let Ok(mut cached) = self.cached_settings.write() {
@@ -59,16 +68,19 @@ impl SettingsService {
     pub fn save_ui_settings(&self, settings: &UISettings) -> AppResult<()> {
         settings.validate()?;
 
+        let mut sanitized_settings = settings.clone();
+        sanitized_settings.sanitize_font_settings(&self.font_registry);
+
         // Use the runtime handle to execute async operation
         let database_service = self.database_service.clone();
-        let settings_clone = settings.clone();
+        let settings_clone = sanitized_settings.clone();
 
-        self.runtime_handle
+        self.runtime
             .block_on(async { database_service.save_ui_settings(&settings_clone).await })?;
 
         // Update cache
         if let Ok(mut cached) = self.cached_settings.write() {
-            *cached = Some(settings.clone());
+            *cached = Some(sanitized_settings);
         }
 
         info!("UI settings saved successfully");
@@ -79,12 +91,17 @@ impl SettingsService {
         // Validate before saving
         settings.validate()?;
 
+        let mut sanitized_settings = settings.clone();
+        sanitized_settings.sanitize_font_settings(&self.font_registry);
+
         // Save to database
-        self.database_service.save_ui_settings(settings).await?;
+        self.database_service
+            .save_ui_settings(&sanitized_settings)
+            .await?;
 
         // Update cache
         if let Ok(mut cached) = self.cached_settings.write() {
-            *cached = Some(settings.clone());
+            *cached = Some(sanitized_settings);
         }
 
         info!("UI settings saved successfully");

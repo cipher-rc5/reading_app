@@ -1,5 +1,5 @@
 // file: src/types/errors.rs
-// description: Comprehensive error types
+// description: comprehensive error types
 
 use thiserror::Error;
 

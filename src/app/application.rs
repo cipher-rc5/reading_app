@@ -1,15 +1,25 @@
-// file: src/app/app.rs
-// description: Updated app with proper database initialization and window integration
+// file: src/app/application.rs
+// description: app with proper database initialization and window integration
 
 use crate::{
-    app::runtime,
-    config::AppConfig,
+    app::runtime::AppRuntime,
     services::{ArticleService, DatabaseService, SettingsService},
     types::{Article, ContentType, RequestStatus, UISettings},
     ui::{components::*, events::UIEvent, windows::*},
+    utils::fonts::FontRegistry,
 };
 use eframe::egui;
 use tracing::{error, info};
+
+pub struct AppInitialization {
+    pub runtime: AppRuntime,
+    pub article_service: ArticleService,
+    pub database_service: DatabaseService,
+    pub settings_service: SettingsService,
+    pub font_registry: FontRegistry,
+    pub ui_settings: UISettings,
+    pub recent_articles: Vec<Article>,
+}
 
 pub struct App {
     // Services
@@ -36,7 +46,7 @@ pub struct App {
     message_sender: Option<tokio::sync::mpsc::UnboundedSender<UIEvent>>,
 
     // Runtime handle for async operations
-    runtime_handle: tokio::runtime::Handle,
+    runtime: AppRuntime,
 
     // Enhanced UI state
     ui_settings: UISettings,
@@ -48,86 +58,44 @@ pub struct App {
     selected_article: Option<Article>,
     bookmarked_articles: Vec<Article>,
     show_bookmarks: bool,
+
+    // Font management
+    font_registry: FontRegistry,
 }
 
 impl App {
-    pub fn new(config: AppConfig) -> Self {
-        info!("Initializing enhanced application with bibliotheca features");
+    pub fn new(init: AppInitialization) -> Self {
+        info!("Initializing application with explicit dependencies");
 
-        // Get the global runtime handle
-        let runtime_handle = runtime::get_runtime_handle();
+        let AppInitialization {
+            runtime,
+            article_service,
+            database_service,
+            settings_service,
+            font_registry,
+            ui_settings,
+            recent_articles,
+        } = init;
 
-        // Initialize database service synchronously using the runtime
-        let database_service = runtime_handle.block_on(async {
-            match DatabaseService::new_async(&config).await {
-                Ok(service) => {
-                    info!("Database service initialized successfully");
-                    service
-                }
-                Err(e) => {
-                    error!("Failed to initialize database service: {}", e);
-                    DatabaseService::default()
-                }
-            }
-        });
-
-        let article_service = ArticleService::new(&config).unwrap_or_else(|e| {
-            error!("Failed to initialize article service: {}", e);
-            ArticleService::default()
-        });
-
-        let settings_service = SettingsService::new(database_service.clone());
-
-        // Load UI settings
-        let ui_settings = settings_service.get_ui_settings();
-
-        // Create async message channel
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-
-        // Initialize UI components
-        let sidebar = Sidebar::new();
-        let article_viewer = ArticleViewer::new();
-        let toolbar = Toolbar::new();
-        let status_bar = StatusBar::new();
-
-        // Initialize windows
-        let settings_window = SettingsWindow::new();
-        let search_window = SearchWindow::new();
-        let debug_window = DebugWindow::new();
-        let definition_window = DefinitionWindow::new();
-        let explanation_window = ExplanationWindow::new();
-
-        // Pre-load recent articles synchronously
-        let recent_articles = runtime_handle.block_on(async {
-            match database_service.get_recent_articles(20).await {
-                Ok(articles) => {
-                    info!("Loaded {} recent articles", articles.len());
-                    articles
-                }
-                Err(e) => {
-                    error!("Failed to load recent articles: {}", e);
-                    Vec::new()
-                }
-            }
-        });
 
         Self {
             article_service,
             database_service,
             settings_service,
-            sidebar,
-            article_viewer,
-            toolbar,
-            status_bar,
-            settings_window,
-            search_window,
-            debug_window,
-            definition_window,
-            explanation_window,
+            sidebar: Sidebar::new(),
+            article_viewer: ArticleViewer::new(),
+            toolbar: Toolbar::new(),
+            status_bar: StatusBar::new(),
+            settings_window: SettingsWindow::new(),
+            search_window: SearchWindow::new(),
+            debug_window: DebugWindow::new(),
+            definition_window: DefinitionWindow::new(),
+            explanation_window: ExplanationWindow::new(),
             current_status: RequestStatus::Idle,
             message_receiver: Some(rx),
             message_sender: Some(tx),
-            runtime_handle,
+            runtime,
             ui_settings,
             settings_changed: false,
             sidebar_collapsed: false,
@@ -135,89 +103,7 @@ impl App {
             selected_article: None,
             bookmarked_articles: Vec::new(),
             show_bookmarks: false,
-        }
-    }
-
-    // Add async initialization method
-    pub async fn new_async(config: AppConfig) -> crate::types::AppResult<Self> {
-        info!("Initializing enhanced application with bibliotheca features");
-
-        // Initialize services asynchronously
-        let database_service = DatabaseService::new_async(&config)
-            .await
-            .unwrap_or_else(|e| {
-                error!("Failed to initialize database service: {}", e);
-                DatabaseService::default()
-            });
-
-        let article_service = ArticleService::new(&config).unwrap_or_else(|e| {
-            error!("Failed to initialize article service: {}", e);
-            ArticleService::default()
-        });
-
-        let settings_service = SettingsService::new(database_service.clone());
-
-        // Load UI settings asynchronously
-        let ui_settings = settings_service.get_ui_settings();
-
-        // Get runtime handle
-        let runtime_handle = tokio::runtime::Handle::current();
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-
-        // Initialize UI components
-        let sidebar = Sidebar::new();
-        let article_viewer = ArticleViewer::new();
-        let toolbar = Toolbar::new();
-        let status_bar = StatusBar::new();
-
-        // Initialize windows
-        let settings_window = SettingsWindow::new();
-        let search_window = SearchWindow::new();
-        let debug_window = DebugWindow::new();
-        let definition_window = DefinitionWindow::new();
-        let explanation_window = ExplanationWindow::new();
-
-        let mut app = Self {
-            article_service,
-            database_service,
-            settings_service,
-            sidebar,
-            article_viewer,
-            toolbar,
-            status_bar,
-            settings_window,
-            search_window,
-            debug_window,
-            definition_window,
-            explanation_window,
-            current_status: RequestStatus::Idle,
-            message_receiver: Some(rx),
-            message_sender: Some(tx),
-            runtime_handle,
-            ui_settings,
-            settings_changed: false,
-            sidebar_collapsed: false,
-            recent_articles: Vec::new(),
-            selected_article: None,
-            bookmarked_articles: Vec::new(),
-            show_bookmarks: false,
-        };
-
-        // Load recent articles asynchronously
-        app.load_recent_articles().await;
-
-        Ok(app)
-    }
-
-    async fn load_recent_articles(&mut self) {
-        match self.database_service.get_recent_articles(20).await {
-            Ok(articles) => {
-                self.recent_articles = articles;
-                info!("Loaded {} recent articles", self.recent_articles.len());
-            }
-            Err(e) => {
-                error!("Failed to load recent articles: {}", e);
-            }
+            font_registry,
         }
     }
 
@@ -246,7 +132,7 @@ impl App {
                     subject: article.subject.clone(),
                     content: article.clone(),
                 };
-                self.current_status = RequestStatus::Success(content_type);
+                self.current_status = RequestStatus::Success(Box::new(content_type));
                 self.selected_article = Some(article.clone());
                 // Add to recent articles at the beginning
                 self.recent_articles.insert(0, article);
@@ -269,7 +155,7 @@ impl App {
                     subject: article.subject.clone(),
                     content: article,
                 };
-                self.current_status = RequestStatus::Success(content_type);
+                self.current_status = RequestStatus::Success(Box::new(content_type));
             }
             UIEvent::DeleteArticle(title) => {
                 // Remove from recent articles
@@ -277,18 +163,20 @@ impl App {
                 // Remove from bookmarks
                 self.bookmarked_articles.retain(|a| a.title != title);
                 // If the deleted article was selected, clear selection
-                if let Some(ref selected) = self.selected_article {
-                    if selected.title == title {
-                        self.selected_article = None;
-                        self.current_status = RequestStatus::Idle;
-                    }
+                if self
+                    .selected_article
+                    .as_ref()
+                    .is_some_and(|selected| selected.title == title)
+                {
+                    self.selected_article = None;
+                    self.current_status = RequestStatus::Idle;
                 }
             }
             UIEvent::SearchQuery(query) => {
                 let database_service = self.database_service.clone();
                 let tx = self.message_sender.as_ref().unwrap().clone();
 
-                self.runtime_handle.spawn(async move {
+                self.runtime.spawn(async move {
                     match database_service.search_articles(&query).await {
                         Ok(articles) => {
                             // Send results back through message system
@@ -309,7 +197,7 @@ impl App {
                         subject: article.subject.clone(),
                         content: article,
                     };
-                    self.current_status = RequestStatus::Success(content_type);
+                    self.current_status = RequestStatus::Success(Box::new(content_type));
                 }
             }
             UIEvent::ToggleSidebar => {
@@ -347,7 +235,7 @@ impl App {
                 let tx = self.message_sender.as_ref().unwrap().clone();
                 let article_clone = article.clone();
 
-                self.runtime_handle.spawn(async move {
+                self.runtime.spawn(async move {
                     match database_service.save_article(&article_clone).await {
                         Ok(_) => {
                             info!("Article saved to database: {}", article_clone.title);
@@ -383,10 +271,8 @@ impl App {
                 info!("Text explanation requested: {}", text);
                 self.explanation_window.explain_text(text, context);
             }
-            // Handle all other events with todo!() for now
-            _ => {
-                // All other events are handled with placeholder implementations
-            }
+            // Ignore unimplemented events until their workflows are available
+            _ => {}
         }
     }
 
@@ -402,7 +288,7 @@ impl App {
             let article_service = self.article_service.clone();
 
             // Spawn on the runtime instead of std::thread
-            self.runtime_handle.spawn(async move {
+            self.runtime.spawn(async move {
                 match article_service
                     .generate_article_async(subject, custom_topic)
                     .await
@@ -514,6 +400,7 @@ impl eframe::App for App {
                             ui,
                             &self.current_status,
                             &self.ui_settings,
+                            &self.font_registry,
                         );
                     }
                 });
@@ -529,12 +416,17 @@ impl eframe::App for App {
         });
 
         // Draw windows
-        let settings_events = self.settings_window.draw(ctx, &mut self.settings_service);
+        let settings_events =
+            self.settings_window
+                .draw(ctx, &mut self.settings_service, &self.font_registry);
         for event in settings_events {
             self.handle_ui_event(event, ctx);
         }
 
-        self.search_window.draw(ctx, &self.database_service);
+        let search_events = self.search_window.draw(ctx);
+        for event in search_events {
+            self.handle_ui_event(event, ctx);
+        }
         self.debug_window.draw(ctx, &self.database_service);
         self.definition_window.draw(ctx);
         self.explanation_window.draw(ctx);
@@ -553,12 +445,13 @@ impl eframe::App for App {
 impl App {
     fn draw_article_with_actions(&self, ui: &mut egui::Ui, article: &Article) -> Vec<UIEvent> {
         let mut events = Vec::new();
+        let fonts = &self.font_registry;
 
         // Article header
         ui.horizontal(|ui| {
             let title_text = self
                 .ui_settings
-                .apply_header_style(egui::RichText::new(&article.title));
+                .apply_header_style(fonts, egui::RichText::new(&article.title));
             ui.heading(title_text);
         });
 
@@ -600,7 +493,7 @@ impl App {
         ui.horizontal(|ui| {
             let meta_style = |text: String| {
                 self.ui_settings
-                    .apply_text_body_style(egui::RichText::new(text).weak())
+                    .apply_text_body_style(fonts, egui::RichText::new(text).weak())
             };
 
             ui.label(meta_style(format!(
@@ -638,7 +531,12 @@ impl App {
 
                 // Use the regular markdown renderer for clean display
                 let mut markdown_renderer = crate::ui::rendering::markdown::MarkdownRenderer::new();
-                markdown_renderer.render_with_settings(ui, &article.content, &self.ui_settings);
+                markdown_renderer.render_with_settings(
+                    ui,
+                    &article.content,
+                    &self.ui_settings,
+                    fonts,
+                );
 
                 // Bottom padding
                 ui.add_space(40.0);

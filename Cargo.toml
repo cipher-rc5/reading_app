@@ -1,25 +1,64 @@
 [package]
 name = "reading_app"
 version = "0.1.0"
-edition = "2021"
+authors = ["ℭ𝔦𝔭𝔥𝔢𝔯", "https://github.com/cipher-rc5"]
+categories = ["gui"]
+edition = "2024"
+keywords = ["reading", "gui", "egui"]
+license = "MIT OR Apache-2.0"
+readme = "readme.md"
+repository = "https://github.com/cipher_rc5/reading_app"
+description = "application for dynamically generating reading passages"
+
+[features]
+default = []
+# Add feature flags here as needed
+# offline-mode = []
+# premium = []
 
 [dependencies]
-anyhow = "1.0.99"
-chrono = { version = "0.4.41", features = ["serde"] }
-dirs = "6.0.0"
-dotenvy = "0.15.7"
-eframe = { version = "0.32.2", features = ["default_fonts", "glow", "persistence"] }
-egui = "0.32.2"
-env_logger = "0.11.8"
-futures = "0.3.31"
-libsql = "0.9.23"
-reqwest = { version = "0.12.23", features = ["json", "blocking"] }
-rustc_version_runtime = "0.3.0"
-serde = { version = "1.0.219", features = ["serde_derive"] }
-serde_json = "1.0.143"
-thiserror = "2.0.16"
-tokio = { version = "1.47.1", features = ["full", "macros"] }
-tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt", "ansi"] }
-uuid = { version = "1.18.1", features = ["v4"] }
-webbrowser = "1.0.1"
+# GUI Framework
+eframe = { version = "0.32", features = ["default_fonts", "glow", "persistence"] }
+egui = "0.32"
+tokio = { version = "1", features = ["full", "macros"] }
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "blocking"] }
+
+# Database
+libsql = "0.9"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Configuration
+dotenvy = "0.15"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "2.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "ansi"] }
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Utilities
+dirs = "6.0"
+uuid = { version = "1", features = ["v4", "serde"] }
+webbrowser = "1.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 1
+
+# Optimize dependencies in dev mode for better performance
+[profile.dev.package."*"]
+opt-level = 2

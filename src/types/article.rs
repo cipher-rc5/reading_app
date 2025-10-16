@@ -1,5 +1,5 @@
 // file: src/types/article.rs
-// description: Article-related types with proper import structure
+// description: article-related types with proper import structure
 
 use super::errors::AppResult;
 use super::validation::InputValidator;

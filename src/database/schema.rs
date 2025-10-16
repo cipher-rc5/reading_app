@@ -1,5 +1,5 @@
 // file: src/database/schema.rs
-// description: Fixed database schema with proper column handling
+// description: database schema with proper column handling
 
 use super::connection::DatabaseConnection;
 use crate::types::AppResult;
@@ -29,8 +29,7 @@ pub async fn initialize(conn: &DatabaseConnection) -> AppResult<()> {
     )
     .await?;
 
-    // Reading history table - FIXED to check existing structure first
-    // First, check if the table exists and what columns it has
+    // Reading history table, initially checking if table exists and table columns
     let mut existing_columns = Vec::new();
 
     // Get table info
@@ -49,18 +48,18 @@ pub async fn initialize(conn: &DatabaseConnection) -> AppResult<()> {
         }
     }
 
-    // If table doesn't exist or is missing columns, recreate it
+    // table doesn't exist or is missing columns, create it
     if existing_columns.is_empty() || !existing_columns.contains(&"passage_id".to_string()) {
         info!("Recreating reading_history table with proper schema");
 
-        // Drop the old table if it exists
+        // drop old table if it exists
         conn.execute(
             "DROP TABLE IF EXISTS reading_history",
             libsql::params::Params::Positional(vec![]),
         )
         .await?;
 
-        // Create the new table with all required columns
+        // create new table with all required columns
         conn.execute(
             r#"
             CREATE TABLE reading_history (
@@ -81,7 +80,7 @@ pub async fn initialize(conn: &DatabaseConnection) -> AppResult<()> {
         .await?;
     }
 
-    // New reading passages table
+    // new reading passages table
     conn.execute(
         r#"
         CREATE TABLE IF NOT EXISTS reading_passages (
@@ -106,7 +105,7 @@ pub async fn initialize(conn: &DatabaseConnection) -> AppResult<()> {
     )
     .await?;
 
-    // Reading passage questions table
+    // reading passage questions table
     conn.execute(
         r#"
         CREATE TABLE IF NOT EXISTS reading_passage_questions (
@@ -128,7 +127,7 @@ pub async fn initialize(conn: &DatabaseConnection) -> AppResult<()> {
     )
     .await?;
 
-    // User progress tracking for reading passages
+    // user progress tracking for reading passages
     conn.execute(
         r#"
         CREATE TABLE IF NOT EXISTS reading_passage_progress (
@@ -148,7 +147,7 @@ pub async fn initialize(conn: &DatabaseConnection) -> AppResult<()> {
     )
     .await?;
 
-    // Enhanced user preferences table
+    // enhanced user preferences table
     conn.execute(
         r#"
         CREATE TABLE IF NOT EXISTS user_preferences (
@@ -188,7 +187,7 @@ pub async fn initialize(conn: &DatabaseConnection) -> AppResult<()> {
     )
     .await?;
 
-    // Create indexes for better performance
+    // create indexes for better performance
     let indexes = [
         "CREATE INDEX IF NOT EXISTS idx_articles_generated_at ON articles(generated_at DESC)",
         "CREATE INDEX IF NOT EXISTS idx_articles_subject ON articles(subject)",
@@ -203,7 +202,7 @@ pub async fn initialize(conn: &DatabaseConnection) -> AppResult<()> {
             .await?;
     }
 
-    // Insert default user preferences if none exist
+    // insert default user preferences if none exist
     let count: i64 = {
         let mut rows = conn
             .query(

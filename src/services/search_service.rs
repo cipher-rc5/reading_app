@@ -1,5 +1,5 @@
 // file: src/services/search_service.rs
-// description: Search functionality service
+// description: search functionality service
 
 use crate::{
     services::DatabaseService,

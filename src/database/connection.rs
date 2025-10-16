@@ -1,8 +1,8 @@
 // file: src/database/connection.rs
-// description: Database connection management
+// description: database connection management
 
-use crate::types::errors::DatabaseError;
 use crate::types::AppResult;
+use crate::types::errors::DatabaseError;
 use libsql::{Builder, Connection};
 use std::sync::Arc;
 use tokio::sync::RwLock;

@@ -1,7 +1,6 @@
 // file: src/database/repositories/article_repository.rs
-// description: Article data access layer
+// description: article data access layer
 
-// use crate::types::InputValidator;
 use crate::{
     database::connection::DatabaseConnection,
     types::{AppResult, Article, ArticleSubject},

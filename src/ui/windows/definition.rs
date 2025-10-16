@@ -139,11 +139,12 @@ impl DefinitionWindow {
             info!("Received dictionary response, parsing...");
 
             // Try to parse as array first (normal case)
-            if let Ok(entries) = serde_json::from_str::<Vec<DictionaryEntry>>(&json_text) {
-                if let Some(first_entry) = entries.into_iter().next() {
-                    info!("Successfully parsed dictionary entry for: {}", word);
-                    return Ok(first_entry);
-                }
+            if let Some(first_entry) = serde_json::from_str::<Vec<DictionaryEntry>>(&json_text)
+                .ok()
+                .and_then(|entries| entries.into_iter().next())
+            {
+                info!("Successfully parsed dictionary entry for: {}", word);
+                return Ok(first_entry);
             }
 
             // Try to parse as single entry
@@ -172,26 +173,28 @@ impl DefinitionWindow {
         }
 
         // Check for received definition
-        if let Some(ref receiver) = self.definition_receiver {
-            if let Ok(result) = receiver.try_recv() {
-                self.loading = false;
-                match result {
-                    Ok(definition) => {
-                        info!("Definition received for: {}", self.current_word);
-                        self.definition_data = Some(definition);
-                        self.error_message = None;
-                    }
-                    Err(error) => {
-                        error!(
-                            "Definition lookup failed for {}: {}",
-                            self.current_word, error
-                        );
-                        self.error_message = Some(error);
-                        self.definition_data = None;
-                    }
+        if let Some(result) = self
+            .definition_receiver
+            .as_ref()
+            .and_then(|receiver| receiver.try_recv().ok())
+        {
+            self.loading = false;
+            match result {
+                Ok(definition) => {
+                    info!("Definition received for: {}", self.current_word);
+                    self.definition_data = Some(definition);
+                    self.error_message = None;
                 }
-                self.definition_receiver = None;
+                Err(error) => {
+                    error!(
+                        "Definition lookup failed for {}: {}",
+                        self.current_word, error
+                    );
+                    self.error_message = Some(error);
+                    self.definition_data = None;
+                }
             }
+            self.definition_receiver = None;
         }
 
         egui::Window::new(format!("Definition: {}", self.current_word))
@@ -265,8 +268,9 @@ impl DefinitionWindow {
 
                         for (name, url) in search_urls {
                             if ui.small_button(name).clicked() {
-                                if let Err(e) = webbrowser::open(&url) {
-                                    error!("Failed to open browser: {}", e);
+                                match webbrowser::open(&url) {
+                                    Ok(_) => {}
+                                    Err(error) => error!("Failed to open browser: {}", error),
                                 }
                             }
                         }
@@ -329,40 +333,44 @@ impl DefinitionWindow {
             }
 
             // Synonyms if available
-            if let Some(ref synonyms) = meaning.synonyms {
-                if !synonyms.is_empty() {
-                    ui.horizontal_wrapped(|ui| {
-                        ui.label(egui::RichText::new("Synonyms:").strong());
-                        for (i, synonym) in synonyms.iter().take(5).enumerate() {
-                            if i > 0 {
-                                ui.label(",");
-                            }
-                            ui.label(synonym);
+            if let Some(synonyms) = meaning
+                .synonyms
+                .as_ref()
+                .filter(|synonyms| !synonyms.is_empty())
+            {
+                ui.horizontal_wrapped(|ui| {
+                    ui.label(egui::RichText::new("Synonyms:").strong());
+                    for (i, synonym) in synonyms.iter().take(5).enumerate() {
+                        if i > 0 {
+                            ui.label(",");
                         }
-                        if synonyms.len() > 5 {
-                            ui.label(format!("... and {} more", synonyms.len() - 5));
-                        }
-                    });
-                    ui.add_space(5.0);
-                }
+                        ui.label(synonym);
+                    }
+                    if synonyms.len() > 5 {
+                        ui.label(format!("... and {} more", synonyms.len() - 5));
+                    }
+                });
+                ui.add_space(5.0);
             }
 
             // Antonyms if available
-            if let Some(ref antonyms) = meaning.antonyms {
-                if !antonyms.is_empty() {
-                    ui.horizontal_wrapped(|ui| {
-                        ui.label(egui::RichText::new("Antonyms:").strong());
-                        for (i, antonym) in antonyms.iter().take(5).enumerate() {
-                            if i > 0 {
-                                ui.label(",");
-                            }
-                            ui.label(antonym);
+            if let Some(antonyms) = meaning
+                .antonyms
+                .as_ref()
+                .filter(|antonyms| !antonyms.is_empty())
+            {
+                ui.horizontal_wrapped(|ui| {
+                    ui.label(egui::RichText::new("Antonyms:").strong());
+                    for (i, antonym) in antonyms.iter().take(5).enumerate() {
+                        if i > 0 {
+                            ui.label(",");
                         }
-                        if antonyms.len() > 5 {
-                            ui.label(format!("... and {} more", antonyms.len() - 5));
-                        }
-                    });
-                }
+                        ui.label(antonym);
+                    }
+                    if antonyms.len() > 5 {
+                        ui.label(format!("... and {} more", antonyms.len() - 5));
+                    }
+                });
             }
         }
 

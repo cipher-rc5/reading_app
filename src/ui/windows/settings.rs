@@ -4,6 +4,7 @@
 use crate::services::SettingsService;
 use crate::types::UISettings;
 use crate::ui::events::UIEvent;
+use crate::utils::fonts::FontRegistry;
 use egui;
 use tracing::{error, info};
 
@@ -32,6 +33,7 @@ impl SettingsWindow {
         &mut self,
         ctx: &egui::Context,
         settings_service: &mut SettingsService,
+        fonts: &FontRegistry,
     ) -> Vec<UIEvent> {
         let mut events = Vec::new();
 
@@ -49,7 +51,7 @@ impl SettingsWindow {
 
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     let heading_text = ui_settings
-                        .apply_font_style(egui::RichText::new("UI Customization").strong());
+                        .apply_font_style(fonts, egui::RichText::new("UI Customization").strong());
                     ui.heading(heading_text);
                     ui.separator();
 
@@ -146,8 +148,7 @@ impl SettingsWindow {
                                 .selected_text(&ui_settings.text_body_font)
                                 .show_ui(ui, |ui| {
                                     // Use the font manager to get available fonts
-                                    let available_fonts =
-                                        crate::utils::fonts::get_available_fonts();
+                                    let available_fonts = UISettings::get_available_fonts(fonts);
                                     for (value, display) in available_fonts {
                                         if ui
                                             .selectable_value(
@@ -169,8 +170,7 @@ impl SettingsWindow {
                                 .selected_text(&ui_settings.header_font)
                                 .show_ui(ui, |ui| {
                                     // Use the font manager to get available fonts
-                                    let available_fonts =
-                                        crate::utils::fonts::get_available_fonts();
+                                    let available_fonts = UISettings::get_available_fonts(fonts);
                                     for (value, display) in available_fonts {
                                         if ui
                                             .selectable_value(
@@ -192,8 +192,7 @@ impl SettingsWindow {
                                 .selected_text(&ui_settings.font_family)
                                 .show_ui(ui, |ui| {
                                     // Use the font manager to get available fonts
-                                    let available_fonts =
-                                        crate::utils::fonts::get_available_fonts();
+                                    let available_fonts = UISettings::get_available_fonts(fonts);
                                     for (value, display) in available_fonts {
                                         if ui
                                             .selectable_value(

@@ -6,6 +6,7 @@ use crate::{
     ui::events::UIEvent,
     ui::rendering::markdown::MarkdownRenderer,
     ui::rendering::markdown_interactive::InteractiveMarkdownRenderer,
+    utils::fonts::FontRegistry,
 };
 use egui;
 
@@ -28,41 +29,39 @@ impl ArticleViewer {
         self.interactive_mode = interactive;
     }
 
-    pub fn draw(&mut self, ui: &mut egui::Ui, status: &RequestStatus) -> Vec<UIEvent> {
-        self.draw_with_settings(ui, status, &UISettings::default())
-    }
-
     pub fn draw_with_settings(
         &mut self,
         ui: &mut egui::Ui,
         status: &RequestStatus,
         settings: &UISettings,
+        fonts: &FontRegistry,
     ) -> Vec<UIEvent> {
         let mut events = Vec::new();
 
         match status {
             RequestStatus::Idle => {
-                self.draw_welcome_screen(ui, settings);
+                self.draw_welcome_screen(ui, settings, fonts);
             }
             RequestStatus::Loading => {
-                self.draw_loading_screen(ui, settings);
+                self.draw_loading_screen(ui, settings, fonts);
             }
             RequestStatus::Success(content_type) => {
-                let content_events = self.draw_content(ui, content_type, settings);
+                let content_events = self.draw_content(ui, content_type.as_ref(), settings, fonts);
                 events.extend(content_events);
             }
             RequestStatus::Error(error) => {
-                self.draw_error_screen(ui, error, settings);
+                self.draw_error_screen(ui, error, settings, fonts);
             }
         }
 
         events
     }
 
-    fn draw_welcome_screen(&self, ui: &mut egui::Ui, settings: &UISettings) {
+    fn draw_welcome_screen(&self, ui: &mut egui::Ui, settings: &UISettings, fonts: &FontRegistry) {
         ui.vertical_centered(|ui| {
             ui.add_space(50.0);
             let app_title = settings.apply_header_style(
+                fonts,
                 egui::RichText::new("Reading App")
                     .strong()
                     .size(settings.get_font_size() * 2.0),
@@ -73,7 +72,7 @@ impl ArticleViewer {
             ui.add_space(20.0);
 
             let instruction_text =
-                settings.apply_text_body_style(egui::RichText::new("Get started by:"));
+                settings.apply_text_body_style(fonts, egui::RichText::new("Get started by:"));
             ui.label(instruction_text);
 
             let bullet_points = [
@@ -83,7 +82,7 @@ impl ArticleViewer {
             ];
 
             for point in bullet_points {
-                let point_text = settings.apply_text_body_style(egui::RichText::new(point));
+                let point_text = settings.apply_text_body_style(fonts, egui::RichText::new(point));
                 ui.label(point_text);
             }
 
@@ -91,6 +90,7 @@ impl ArticleViewer {
             ui.separator();
             ui.add_space(10.0);
             let info_text = settings.apply_text_body_style(
+                fonts,
                 egui::RichText::new(
                     "Articles are generated using Groq AI and stored in your local database",
                 )
@@ -100,31 +100,28 @@ impl ArticleViewer {
         });
     }
 
-    fn draw_loading_screen(&self, ui: &mut egui::Ui, settings: &UISettings) {
+    fn draw_loading_screen(&self, ui: &mut egui::Ui, settings: &UISettings, fonts: &FontRegistry) {
         ui.vertical_centered(|ui| {
             ui.add_space(100.0);
-            let loading_title =
-                settings.apply_header_style(egui::RichText::new("Generating Article...").strong());
+            let loading_title = settings
+                .apply_header_style(fonts, egui::RichText::new("Generating Article...").strong());
             ui.heading(loading_title);
             ui.add_space(20.0);
             ui.add(egui::Spinner::new().size(40.0));
             ui.add_space(20.0);
-            let wait_text = settings.apply_text_body_style(egui::RichText::new(
-                "Please wait while we generate your article using Groq AI.",
-            ));
+            let wait_text = settings.apply_text_body_style(
+                fonts,
+                egui::RichText::new("Please wait while we generate your article using Groq AI."),
+            );
             ui.label(wait_text);
             let duration_text = settings.apply_text_body_style(
+                fonts,
                 egui::RichText::new(
                     "This usually takes 10-30 seconds depending on article length.",
                 )
                 .size(settings.get_font_size() * 0.85),
             );
             ui.label(duration_text);
-
-            ui.add_space(20.0);
-            if ui.button("Cancel").clicked() {
-                // TODO: Handle cancellation
-            }
         });
     }
 
@@ -133,40 +130,48 @@ impl ArticleViewer {
         ui: &mut egui::Ui,
         content_type: &ContentType,
         settings: &UISettings,
+        fonts: &FontRegistry,
     ) -> Vec<UIEvent> {
         match content_type {
             ContentType::Article { content, .. } => {
                 if self.interactive_mode {
-                    self.draw_interactive_article(ui, content, settings)
+                    self.draw_interactive_article(ui, content, settings, fonts)
                 } else {
-                    self.draw_article(ui, content, settings);
+                    self.draw_article(ui, content, settings, fonts);
                     Vec::new()
                 }
             }
             ContentType::ReadingPassage { content, .. } => {
                 if self.interactive_mode {
-                    self.draw_interactive_reading_passage(ui, content, settings)
+                    self.draw_interactive_reading_passage(ui, content, settings, fonts)
                 } else {
-                    self.draw_reading_passage(ui, content, settings);
+                    self.draw_reading_passage(ui, content, settings, fonts);
                     Vec::new()
                 }
             }
         }
     }
 
-    fn draw_article(&mut self, ui: &mut egui::Ui, article: &Article, settings: &UISettings) {
+    fn draw_article(
+        &mut self,
+        ui: &mut egui::Ui,
+        article: &Article,
+        settings: &UISettings,
+        fonts: &FontRegistry,
+    ) {
         egui::ScrollArea::vertical()
             .auto_shrink([false, false])
             .show(ui, |ui| {
                 // Article header with enhanced styling
-                let title_text = settings.apply_header_style(egui::RichText::new(&article.title));
+                let title_text =
+                    settings.apply_header_style(fonts, egui::RichText::new(&article.title));
                 ui.heading(title_text);
                 ui.add_space(settings.paragraph_spacing);
 
                 // Article metadata
                 ui.horizontal(|ui| {
                     let meta_style = |text: String| {
-                        settings.apply_text_body_style(egui::RichText::new(text).weak())
+                        settings.apply_text_body_style(fonts, egui::RichText::new(text).weak())
                     };
 
                     ui.label(meta_style(format!(
@@ -197,7 +202,7 @@ impl ArticleViewer {
 
                 // Article content with enhanced EasyMark formatting
                 self.markdown_renderer
-                    .render_with_settings(ui, &article.content, settings);
+                    .render_with_settings(ui, &article.content, settings, fonts);
             });
     }
 
@@ -206,19 +211,21 @@ impl ArticleViewer {
         ui: &mut egui::Ui,
         article: &Article,
         settings: &UISettings,
+        fonts: &FontRegistry,
     ) -> Vec<UIEvent> {
         egui::ScrollArea::vertical()
             .auto_shrink([false, false])
             .show(ui, |ui| {
                 // Article header (non-interactive)
-                let title_text = settings.apply_header_style(egui::RichText::new(&article.title));
+                let title_text =
+                    settings.apply_header_style(fonts, egui::RichText::new(&article.title));
                 ui.heading(title_text);
                 ui.add_space(settings.paragraph_spacing);
 
                 // Article metadata (non-interactive)
                 ui.horizontal(|ui| {
                     let meta_style = |text: String| {
-                        settings.apply_text_body_style(egui::RichText::new(text).weak())
+                        settings.apply_text_body_style(fonts, egui::RichText::new(text).weak())
                     };
 
                     ui.label(meta_style(format!(
@@ -267,8 +274,12 @@ impl ArticleViewer {
                 ui.add_space(settings.paragraph_spacing);
 
                 // Interactive article content
-                self.interactive_renderer
-                    .render_with_settings(ui, &article.content, settings)
+                self.interactive_renderer.render_with_settings(
+                    ui,
+                    &article.content,
+                    settings,
+                    fonts,
+                )
             })
             .inner
     }
@@ -278,19 +289,21 @@ impl ArticleViewer {
         ui: &mut egui::Ui,
         passage: &crate::types::reading_passage::ReadingPassage,
         settings: &UISettings,
+        fonts: &FontRegistry,
     ) {
         egui::ScrollArea::vertical()
             .auto_shrink([false, false])
             .show(ui, |ui| {
                 // Passage header with enhanced styling
-                let title_text = settings.apply_header_style(egui::RichText::new(&passage.title));
+                let title_text =
+                    settings.apply_header_style(fonts, egui::RichText::new(&passage.title));
                 ui.heading(title_text);
                 ui.add_space(settings.paragraph_spacing);
 
                 // Passage metadata
                 ui.horizontal(|ui| {
                     let meta_style = |text: String| {
-                        settings.apply_text_body_style(egui::RichText::new(text).weak())
+                        settings.apply_text_body_style(fonts, egui::RichText::new(text).weak())
                     };
 
                     ui.label(meta_style(format!(
@@ -319,7 +332,7 @@ impl ArticleViewer {
 
                 // Passage content with enhanced EasyMark formatting
                 self.markdown_renderer
-                    .render_with_settings(ui, &passage.content, settings);
+                    .render_with_settings(ui, &passage.content, settings, fonts);
             });
     }
 
@@ -328,19 +341,21 @@ impl ArticleViewer {
         ui: &mut egui::Ui,
         passage: &crate::types::reading_passage::ReadingPassage,
         settings: &UISettings,
+        fonts: &FontRegistry,
     ) -> Vec<UIEvent> {
         egui::ScrollArea::vertical()
             .auto_shrink([false, false])
             .show(ui, |ui| {
                 // Passage header (non-interactive)
-                let title_text = settings.apply_header_style(egui::RichText::new(&passage.title));
+                let title_text =
+                    settings.apply_header_style(fonts, egui::RichText::new(&passage.title));
                 ui.heading(title_text);
                 ui.add_space(settings.paragraph_spacing);
 
                 // Passage metadata (non-interactive)
                 ui.horizontal(|ui| {
                     let meta_style = |text: String| {
-                        settings.apply_text_body_style(egui::RichText::new(text).weak())
+                        settings.apply_text_body_style(fonts, egui::RichText::new(text).weak())
                     };
 
                     ui.label(meta_style(format!(
@@ -387,8 +402,12 @@ impl ArticleViewer {
                 ui.add_space(settings.paragraph_spacing);
 
                 // Interactive passage content
-                self.interactive_renderer
-                    .render_with_settings(ui, &passage.content, settings)
+                self.interactive_renderer.render_with_settings(
+                    ui,
+                    &passage.content,
+                    settings,
+                    fonts,
+                )
             })
             .inner
     }
@@ -398,10 +417,12 @@ impl ArticleViewer {
         ui: &mut egui::Ui,
         error: &crate::types::AppError,
         settings: &UISettings,
+        fonts: &FontRegistry,
     ) {
         ui.vertical_centered(|ui| {
             ui.add_space(50.0);
-            let error_title = settings.apply_header_style(egui::RichText::new("Error").strong());
+            let error_title =
+                settings.apply_header_style(fonts, egui::RichText::new("Error").strong());
             ui.heading(error_title);
             ui.add_space(20.0);
             ui.separator();
@@ -413,7 +434,7 @@ impl ArticleViewer {
             // Better error display with wrapping
             ui.horizontal_wrapped(|ui| {
                 let error_text =
-                    settings.apply_text_body_style(egui::RichText::new(&error.to_string()));
+                    settings.apply_text_body_style(fonts, egui::RichText::new(error.to_string()));
                 ui.label(error_text);
             });
 
@@ -421,15 +442,13 @@ impl ArticleViewer {
             ui.separator();
             ui.add_space(10.0);
 
-            ui.horizontal(|ui| {
-                if ui.button("Try Again").clicked() {
-                    // TODO: Handle retry
-                }
-
-                if ui.button("Check Settings").clicked() {
-                    // TODO: Handle settings
-                }
-            });
+            let guidance = settings.apply_text_body_style(
+                fonts,
+                egui::RichText::new(
+                    "Use the toolbar to open Settings or generate a new article from the sidebar.",
+                ),
+            );
+            ui.label(guidance);
         });
     }
 

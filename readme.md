@@ -49,70 +49,70 @@ Sophisticated desktop reading application built with Rust, featuring AI-powered 
 
 ```
 src/
-├── app/                    # Main application logic
-│   ├── app.rs             # Core application state and UI
-│   ├── mod.rs             # App module exports
-│   └── runtime.rs         # Global async runtime management
-├── client/                 # External API integrations
-│   ├── groq_client.rs     # Groq API client (gpt-oss-20b)
-│   ├── config.rs          # Client configuration
-│   ├── mod.rs             # Client module exports
-│   └── retry.rs           # Request retry logic
-├── config/                 # Application configuration
-│   ├── app_config.rs      # Main configuration structure
-│   ├── environment.rs     # Environment variable handling
-│   └── mod.rs             # Config module exports
-├── database/               # Data persistence layer
-│   ├── connection.rs      # Database connection management
-│   ├── models.rs          # Data models and schemas
-│   ├── schema.rs          # Database schema definitions
-│   ├── mod.rs             # Database module exports
-│   └── repositories/      # Data access objects
+├── app/                            # Main application logic
+│   ├── app.rs                      # Core application state and UI
+│   ├── mod.rs                      # App module exports
+│   └── runtime.rs                  # Global async runtime management
+├── client/                         # External API integrations
+│   ├── groq_client.rs              # Groq API client (gpt-oss-20b)
+│   ├── config.rs                   # Client configuration
+│   ├── mod.rs                      # Client module exports
+│   └── retry.rs                    # Request retry logic
+├── config/                         # Application configuration
+│   ├── app_config.rs               # Main configuration structure
+│   ├── environment.rs              # Environment variable handling
+│   └── mod.rs                      # Config module exports
+├── database/                       # Data persistence layer
+│   ├── connection.rs               # Database connection management
+│   ├── models.rs                   # Data models and schemas
+│   ├── schema.rs                   # Database schema definitions
+│   ├── mod.rs                      # Database module exports
+│   └── repositories/               # Data access objects
 │       ├── article_repository.rs
 │       ├── reading_history_repository.rs
 │       ├── settings_repository.rs
 │       └── mod.rs
-├── services/               # Business logic layer
-│   ├── article_service.rs # Article generation and management
-│   ├── database_service.rs # Database operations
-│   ├── search_service.rs  # Search functionality
-│   ├── settings_service.rs # Settings management
-│   └── mod.rs             # Services module exports
-├── types/                  # Type definitions and domain models
-│   ├── article.rs         # Article data structures
-│   ├── errors.rs          # Error types and handling
-│   ├── reading_passage.rs # Reading passage structures
-│   ├── settings.rs        # UI settings and preferences
-│   ├── time_utils.rs      # Time and date utilities
-│   ├── validation.rs      # Input validation logic
-│   └── mod.rs             # Types module exports
-├── ui/                     # User interface components
-│   ├── components/        # Reusable UI components
+├── services/                       # Business logic layer
+│   ├── article_service.rs          # Article generation and management
+│   ├── database_service.rs         # Database operations
+│   ├── search_service.rs           # Search functionality
+│   ├── settings_service.rs         # Settings management
+│   └── mod.rs                      # Services module exports
+├── types/                          # Type definitions and domain models
+│   ├── article.rs                  # Article data structures
+│   ├── errors.rs                   # Error types and handling
+│   ├── reading_passage.rs          # Reading passage structures
+│   ├── settings.rs                 # UI settings and preferences
+│   ├── time_utils.rs               # Time and date utilities
+│   ├── validation.rs               # Input validation logic
+│   └── mod.rs                      # Types module exports
+├── ui/                             # User interface components
+│   ├── components/                 # Reusable UI components
 │   │   ├── article_viewer.rs
 │   │   ├── sidebar.rs
 │   │   ├── status_bar.rs
 │   │   ├── text_toolbar.rs
 │   │   ├── toolbar.rs
 │   │   └── mod.rs
-│   ├── rendering/         # Content rendering
-│   │   ├── markdown.rs    # Markdown rendering
-│   │   ├── themes.rs      # UI themes and styling
+│   ├── rendering/                  # Content rendering
+│   │   ├── markdown.rs             # Markdown rendering
+│   │   ├── themes.rs               # UI themes and styling
 │   │   └── mod.rs
-│   ├── windows/           # Modal windows and dialogs
-│   │   ├── debug.rs       # Debug information window
-│   │   ├── definition.rs  # Word definition lookup
-│   │   ├── explanation.rs # Text explanation window
-│   │   ├── search.rs      # Search interface
-│   │   ├── settings.rs    # Settings configuration
+│   ├── windows/                    # Modal windows and dialogs
+│   │   ├── debug.rs                # Debug information window
+│   │   ├── definition.rs           # Word definition lookup
+│   │   ├── explanation.rs          # Text explanation window
+│   │   ├── search.rs               # Search interface
+│   │   ├── settings.rs             # Settings configuration
 │   │   └── mod.rs
-│   ├── events.rs          # UI event definitions
-│   └── mod.rs             # UI module exports
-├── utils/                  # Utility functions
-│   ├── fonts.rs           # Font management
-│   ├── logging.rs         # Logging configuration
-│   └── mod.rs             # Utils module exports
-├── lib.rs                 # Library root and public exports
-└── main.rs                # Application entry point
+│   ├── events.rs                   # UI event definitions
+│   └── mod.rs                      # UI module exports
+├── utils/                          # Utility functions
+│   ├── fonts.rs                    # Font management
+│   ├── logging.rs                  # Logging configuration
+│   └── mod.rs                      # Utils module exports
+├── lib.rs                          # Library root and public exports
+└── main.rs                         # Application entry point
 ```
 
 ## Installation & Setup
@@ -288,6 +288,9 @@ cargo check
 
 # Generate documentation
 cargo doc --open
+
+# One line to clean and run
+cargo clean && cargo build --release && RUST_LOG=debug cargo run
 ```
 
 ### Key Dependencies
