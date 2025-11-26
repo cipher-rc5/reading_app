@@ -42,7 +42,7 @@ impl TextToolbar {
         }
 
         // Adjust position to stay within window bounds
-        let window_rect = ctx.screen_rect();
+        let window_rect = ctx.viewport_rect();
         let mut adjusted_position = self.position;
 
         // Ensure toolbar doesn't go off screen
@@ -121,7 +121,7 @@ impl TextToolbar {
 
                 ui.horizontal(|ui| {
                     if ui
-                        .button(" Search")
+                        .button("🔍 Search")
                         .on_hover_text("Search for this text")
                         .clicked()
                     {
