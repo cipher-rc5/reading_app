@@ -3,7 +3,7 @@
 
 use crate::types::AppResult;
 use std::sync::Once;
-use tracing_subscriber::{EnvFilter, fmt};
+use tracing_subscriber::{fmt, EnvFilter};
 
 static INIT: Once = Once::new();
 

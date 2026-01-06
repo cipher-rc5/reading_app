@@ -23,7 +23,7 @@ egui = "0.33.0"
 tokio = { version = "1", features = ["full", "macros"] }
 
 # HTTP client
-reqwest = { version = "0.12", features = ["json", "blocking"] }
+reqwest = { version = "0.13.1", features = ["json", "blocking"] }
 
 # Database
 libsql = "0.9"

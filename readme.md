@@ -1,6 +1,6 @@
 # reading_app - README
 
-Sophisticated desktop reading application built with Rust, featuring AI-powered content generation, interactive reading experiences, and comprehensive learning analytics. This application leverages the unique capabilities of gpt-oss-20b via Groq's API for optimal educational content creation.
+desktop reading application built with Rust, featuring AI-powered content generation, interactive reading experiences, and comprehensive learning analytics. This application leverages the unique capabilities of gpt-oss-20b via Groq's API for optimal educational content creation.
 
 ![Reading App Interface](https://github.com/cipher-rc5/reading_app/blob/master/docs/app_usage.png)
 

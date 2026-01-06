@@ -1,4 +1,5 @@
 // file: src/database/repositories/mod.rs
+
 pub mod article_repository;
 pub mod reading_history_repository;
 pub mod settings_repository;

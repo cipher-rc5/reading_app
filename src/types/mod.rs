@@ -1,4 +1,5 @@
 // file: src/types/mod.rs
+
 pub mod article;
 pub mod errors;
 pub mod reading_passage;
