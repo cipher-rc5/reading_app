@@ -331,25 +331,31 @@ impl App {
 }
 
 impl eframe::App for App {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        self.check_messages(ctx);
-        self.apply_ui_settings(ctx);
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        let ctx = ui.ctx().clone();
+        self.check_messages(&ctx);
+        self.apply_ui_settings(&ctx);
 
         // Draw toolbar with menu bar (includes settings in File menu)
-        let toolbar_events = self.toolbar.draw(ctx);
+        let toolbar_events = self.toolbar.draw(ui);
         for event in toolbar_events {
-            self.handle_ui_event(event, ctx);
+            self.handle_ui_event(event, &ctx);
         }
+
+        // Status bar (must come before left panel and central panel)
+        egui::Panel::bottom("status").show_inside(ui, |ui| {
+            self.status_bar.draw(ui, &self.current_status);
+        });
 
         // Draw collapsible sidebar
         if !self.sidebar_collapsed {
             let sidebar_width = self.ui_settings.sidebar_width;
 
             let mut sidebar_events = Vec::new();
-            egui::SidePanel::left("sidebar")
-                .min_width(sidebar_width)
-                .max_width(sidebar_width + 50.0)
-                .show(ctx, |ui| {
+            egui::Panel::left("sidebar")
+                .min_size(sidebar_width)
+                .max_size(sidebar_width + 50.0)
+                .show_inside(ui, |ui| {
                     sidebar_events = self.sidebar.draw_with_articles(
                         ui,
                         &self.recent_articles,
@@ -358,13 +364,13 @@ impl eframe::App for App {
                 });
 
             for event in sidebar_events {
-                self.handle_ui_event(event, ctx);
+                self.handle_ui_event(event, &ctx);
             }
         }
 
         let mut article_events = Vec::new();
         // Main content panel with padding
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show_inside(ui, |ui| {
             // Add left padding when sidebar is visible/collapsed
             let left_padding = 20.0;
 
@@ -386,7 +392,7 @@ impl eframe::App for App {
                             "Hide Sidebar"
                         };
                         if ui.button(button_text).clicked() {
-                            self.handle_ui_event(UIEvent::ToggleSidebar, ctx);
+                            self.handle_ui_event(UIEvent::ToggleSidebar, &ctx);
                         }
                     });
 
@@ -407,29 +413,24 @@ impl eframe::App for App {
         });
 
         for event in article_events {
-            self.handle_ui_event(event, ctx);
+            self.handle_ui_event(event, &ctx);
         }
-
-        // Status bar
-        egui::TopBottomPanel::bottom("status").show(ctx, |ui| {
-            self.status_bar.draw(ui, &self.current_status);
-        });
 
         // Draw windows
         let settings_events =
             self.settings_window
-                .draw(ctx, &mut self.settings_service, &self.font_registry);
+                .draw(&ctx, &mut self.settings_service, &self.font_registry);
         for event in settings_events {
-            self.handle_ui_event(event, ctx);
+            self.handle_ui_event(event, &ctx);
         }
 
-        let search_events = self.search_window.draw(ctx);
+        let search_events = self.search_window.draw(&ctx);
         for event in search_events {
-            self.handle_ui_event(event, ctx);
+            self.handle_ui_event(event, &ctx);
         }
-        self.debug_window.draw(ctx, &self.database_service);
-        self.definition_window.draw(ctx);
-        self.explanation_window.draw(ctx);
+        self.debug_window.draw(&ctx, &self.database_service);
+        self.definition_window.draw(&ctx);
+        self.explanation_window.draw(&ctx);
 
         self.settings_changed = false;
     }

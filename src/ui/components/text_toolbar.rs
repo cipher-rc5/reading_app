@@ -59,7 +59,7 @@ impl TextToolbar {
             .resizable(false)
             .title_bar(false)
             .fixed_pos(adjusted_position)
-            .frame(egui::Frame::popup(&ctx.style()))
+            .frame(egui::Frame::popup(&ctx.global_style()))
             .show(ctx, |ui| {
                 ui.set_min_width(280.0);
 

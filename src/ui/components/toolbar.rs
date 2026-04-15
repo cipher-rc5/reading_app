@@ -21,10 +21,11 @@ impl Default for Toolbar {
 }
 
 impl Toolbar {
-    pub fn draw(&mut self, ctx: &egui::Context) -> Vec<UIEvent> {
+    pub fn draw(&mut self, ui: &mut egui::Ui) -> Vec<UIEvent> {
         let mut events = Vec::new();
+        let ctx = ui.ctx().clone();
 
-        egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
+        egui::Panel::top("toolbar").show_inside(ui, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Settings").clicked() {
@@ -81,7 +82,7 @@ impl Toolbar {
             egui::Window::new("About Reading App")
                 .open(&mut self.show_about)
                 .resizable(false)
-                .show(ctx, |ui| {
+                .show(&ctx, |ui| {
                     ui.label("Reading App helps you generate and organize articles locally.");
                     ui.label("Version:".to_owned() + env!("CARGO_PKG_VERSION"));
                 });

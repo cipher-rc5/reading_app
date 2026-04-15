@@ -10,7 +10,7 @@ pub fn apply_theme(ctx: &egui::Context, settings: &UISettings) {
     let accent_color = settings.get_accent_color();
     let rounding = settings.get_rounding();
 
-    let mut style = (*ctx.style()).clone();
+    let mut style = (*ctx.global_style()).clone();
 
     // Basic colors
     style.visuals.window_fill = bg_color;
@@ -49,5 +49,5 @@ pub fn apply_theme(ctx: &egui::Context, settings: &UISettings) {
     style.spacing.menu_margin = egui::Margin::same(8);
     style.spacing.window_margin = egui::Margin::same(8);
 
-    ctx.set_style(style);
+    ctx.set_global_style(style);
 }
