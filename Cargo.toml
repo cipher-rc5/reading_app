@@ -18,12 +18,12 @@ default = []
 
 [dependencies]
 # GUI Framework
-eframe = { version = "0.34.1", features = ["default_fonts", "glow", "persistence"] }
-egui = "0.34.1"
+eframe = { version = "0.34.3", features = ["default_fonts", "glow", "persistence"] }
+egui = "0.34.3"
 tokio = { version = "1", features = ["full", "macros"] }
 
 # HTTP client
-reqwest = { version = "0.13.3", features = ["json", "blocking"] }
+reqwest = { version = "0.13.4", features = ["json", "blocking"] }
 
 # Database
 libsql = "0.9"
